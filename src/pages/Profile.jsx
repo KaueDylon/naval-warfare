@@ -49,7 +49,7 @@ export default function Profile() {
       setProfile(data);
       setName(data.name || '');
       setSelectedNation(data.nation || '');
-      setSelectedPortrait(data.portrait || '');
+      setSelectedPortrait((data.portrait || '').toUpperCase());
     } catch (err) {
       setError('Falha ao carregar dossiê');
     }
@@ -96,7 +96,7 @@ export default function Profile() {
     setMessage('');
     try {
       await api.setPortrait(portrait);
-      setSelectedPortrait(portrait);
+      setSelectedPortrait(portrait.toUpperCase());
       await refreshUser();
       setMessage('RETRATO ATUALIZADO');
     } catch (err) {
@@ -332,12 +332,17 @@ export default function Profile() {
                 <button
                   key={portrait}
                   onClick={() => handleSetPortrait(portrait)}
-                  className={`p-4 border-2 flex flex-col items-center gap-2 transition-all ${
+                  className={`relative p-4 border-2 flex flex-col items-center gap-2 transition-all ${
                     selectedPortrait === portrait
                       ? 'border-secondary bg-secondary/15'
                       : 'border-outline-variant hover:border-outline hover:bg-surface-container-high'
                   }`}
                 >
+                  {selectedPortrait === portrait && (
+                    <span className="absolute top-1 right-1 material-symbols-outlined text-secondary text-sm">
+                      check_circle
+                    </span>
+                  )}
                   <div className="w-16 h-20 bg-surface-container-high border border-outline-variant flex items-center justify-center grayscale">
                     <span className="material-symbols-outlined text-3xl text-on-surface-variant">
                       person
@@ -349,11 +354,6 @@ export default function Profile() {
                   >
                     {portrait.replace(/_/g, ' ')}
                   </span>
-                  {selectedPortrait === portrait && (
-                    <span className="material-symbols-outlined text-secondary text-sm">
-                      check_circle
-                    </span>
-                  )}
                 </button>
               ))}
             </div>
