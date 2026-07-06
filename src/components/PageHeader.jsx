@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 /**
  * PageHeader — cabeçalho padrão de todas as páginas internas.
@@ -10,17 +10,17 @@ import { useNavigate } from 'react-router-dom';
 export default function PageHeader({ children, shrink = false }) {
   return (
     <header
-      className={`sticky top-0 z-50 border-b-2 border-outline-variant px-6 h-16 flex items-center bg-surface-container-lowest${shrink ? ' shrink-0' : ''}`}
+      className={`sticky top-0 z-50 border-b-2 border-outline-variant px-4 md:px-6 h-16 flex items-center bg-surface-container-lowest${shrink ? " shrink-0" : ""}`}
     >
-      <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
+      <div className="max-w-5xl mx-auto w-full flex items-center justify-between gap-2">
         <h1
-          className="text-xl md:text-2xl stencil-text text-primary"
-          style={{ fontFamily: 'var(--font-headline)' }}
+          className="text-lg md:text-xl lg:text-2xl stencil-text text-primary shrink-0"
+          style={{ fontFamily: "var(--font-headline)" }}
         >
-          PACIFIC.COMMAND
+          NAVAL WARFARE: 1941
         </h1>
         {children && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 md:gap-4 overflow-x-auto">
             {children}
           </div>
         )}
@@ -40,7 +40,7 @@ export function HeaderIconButton({ icon, title, onClick, danger = false }) {
     <button
       onClick={onClick}
       title={title}
-      className={`p-2 text-secondary hover:bg-surface-container transition-colors ${danger ? 'hover:text-error' : 'hover:text-primary'}`}
+      className={`p-2 text-secondary hover:bg-surface-container transition-colors ${danger ? "hover:text-error" : "hover:text-primary"}`}
     >
       <span className="material-symbols-outlined">{icon}</span>
     </button>
@@ -52,11 +52,14 @@ export function BackToHQButton() {
   const navigate = useNavigate();
   return (
     <button
-      onClick={() => navigate('/')}
+      onClick={() => navigate("/")}
       className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
     >
       <span className="material-symbols-outlined text-sm">arrow_back</span>
-      <span className="text-xs uppercase tracking-wider" style={{ fontFamily: 'var(--font-mono)' }}>
+      <span
+        className="text-xs uppercase tracking-wider"
+        style={{ fontFamily: "var(--font-mono)" }}
+      >
         Voltar ao QG
       </span>
     </button>

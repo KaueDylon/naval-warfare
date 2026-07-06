@@ -52,7 +52,7 @@ export default function MatchHistory() {
         <div className="dispatch-border shadow-2xl overflow-hidden">
           {/* Cabeçalho da Tabela */}
           <div
-            className="grid grid-cols-[80px_1fr_140px] gap-4 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
+            className="hidden sm:grid grid-cols-[70px_1fr_130px] gap-4 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Resultado</span>
@@ -75,11 +75,11 @@ export default function MatchHistory() {
                 return (
                   <div
                     key={match.matchId || index}
-                    className="grid grid-cols-[80px_1fr_140px] gap-4 px-4 py-4 items-center hover:bg-surface-container-high transition-colors"
+                    className="flex sm:grid sm:grid-cols-[70px_1fr_130px] gap-3 sm:gap-4 px-4 py-4 items-center hover:bg-surface-container-high transition-colors"
                   >
                     {/* Badge de Resultado */}
                     <div
-                      className={`text-center py-1.5 border-2 ${
+                      className={`text-center py-1.5 border-2 shrink-0 w-16 sm:w-auto ${
                         victory
                           ? 'border-secondary text-secondary bg-secondary/10'
                           : 'border-error text-error bg-error/10'
@@ -94,9 +94,9 @@ export default function MatchHistory() {
                     </div>
 
                     {/* Detalhes */}
-                    <div style={{ fontFamily: 'var(--font-mono)' }}>
-                      <p className="text-on-surface text-sm flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm text-outline">
+                    <div style={{ fontFamily: 'var(--font-mono)' }} className="flex-1 min-w-0">
+                      <p className="text-on-surface text-sm flex items-center gap-2 truncate">
+                        <span className="material-symbols-outlined text-sm text-outline shrink-0">
                           {victory ? 'emoji_events' : 'dangerous'}
                         </span>
                         Missão #{(match.matchId || '').slice(0, 8)}
@@ -104,7 +104,7 @@ export default function MatchHistory() {
                     </div>
 
                     {/* Data */}
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="text-on-surface-variant text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
                         {formatDate(match.playedAt)}
                       </p>

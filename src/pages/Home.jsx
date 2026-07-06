@@ -96,7 +96,7 @@ export default function Home() {
       </PageHeader>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 py-8 pb-24 md:pb-8">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-3 md:px-8 py-6 md:py-8 pb-24 md:pb-8">
         {/* Cabeçalho da Seção */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-primary-container pb-6">
           <div>

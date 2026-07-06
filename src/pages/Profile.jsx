@@ -1,42 +1,55 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import * as api from '../services/api';
-import PageHeader, { HeaderDivider, HeaderIconButton, BackToHQButton } from '../components/PageHeader';
-import AlertBanner from '../components/AlertBanner';
-import BottomNav from '../components/BottomNav';
-import SectionCard from '../components/SectionCard';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import * as api from "../services/api";
+import PageHeader, {
+  HeaderDivider,
+  HeaderIconButton,
+  BackToHQButton,
+} from "../components/PageHeader";
+import AlertBanner from "../components/AlertBanner";
+import BottomNav from "../components/BottomNav";
+import SectionCard from "../components/SectionCard";
 
-const NATIONS = ['USA', 'UK', 'USSR', 'GERMANY', 'JAPAN', 'ITALY'];
+const NATIONS = ["USA", "UK", "USSR", "GERMANY", "JAPAN", "ITALY"];
 
 const NATION_PORTRAITS = {
-  USA: ['USA_GENERAL', 'USA_ADMIRAL', 'USA_PILOT'],
-  UK: ['UK_GENERAL', 'UK_ADMIRAL', 'UK_PILOT'],
-  USSR: ['USSR_GENERAL', 'USSR_ADMIRAL', 'USSR_PILOT'],
-  GERMANY: ['GERMANY_GENERAL', 'GERMANY_ADMIRAL', 'GERMANY_PILOT'],
-  JAPAN: ['JAPAN_GENERAL', 'JAPAN_ADMIRAL', 'JAPAN_PILOT'],
-  ITALY: ['ITALY_GENERAL', 'ITALY_ADMIRAL', 'ITALY_PILOT'],
+  USA: ["USA_GENERAL", "USA_ADMIRAL", "USA_PILOT"],
+  UK: ["UK_GENERAL", "UK_ADMIRAL", "UK_PILOT"],
+  USSR: ["USSR_GENERAL", "USSR_ADMIRAL", "USSR_PILOT"],
+  GERMANY: ["GERMANY_GENERAL", "GERMANY_ADMIRAL", "GERMANY_PILOT"],
+  JAPAN: ["JAPAN_GENERAL", "JAPAN_ADMIRAL", "JAPAN_PILOT"],
+  ITALY: ["ITALY_GENERAL", "ITALY_ADMIRAL", "ITALY_PILOT"],
 };
 
 const NATION_FLAGS = {
-  USA: '🇺🇸',
-  UK: '🇬🇧',
-  USSR: '☭',
-  GERMANY: '🇩🇪',
-  JAPAN: '🇯🇵',
-  ITALY: '🇮🇹',
+  USA: "🇺🇸",
+  UK: "🇬🇧",
+  USSR: "☭",
+  GERMANY: "🇩🇪",
+  JAPAN: "🇯🇵",
+  ITALY: "🇮🇹",
+};
+
+const NATION_LABELS = {
+  USA:     'Estados Unidos',
+  UK:      'Reino Unido',
+  USSR:    'União Soviética',
+  GERMANY: 'Alemanha',
+  JAPAN:   'Japão',
+  ITALY:   'Itália',
 };
 
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [selectedNation, setSelectedNation] = useState('');
-  const [selectedPortrait, setSelectedPortrait] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [selectedNation, setSelectedNation] = useState("");
+  const [selectedPortrait, setSelectedPortrait] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -47,18 +60,18 @@ export default function Profile() {
     try {
       const data = await api.getMe();
       setProfile(data);
-      setName(data.name || '');
-      setSelectedNation(data.nation || '');
-      setSelectedPortrait((data.portrait || '').toUpperCase());
+      setName(data.name || "");
+      setSelectedNation(data.nation || "");
+      setSelectedPortrait((data.portrait || "").toUpperCase());
     } catch (err) {
-      setError('Falha ao carregar dossiê');
+      setError("Falha ao carregar dossiê");
     }
   }
 
   async function handleUpdateInfo(e) {
     e.preventDefault();
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
     setLoading(true);
     try {
       const updates = {};
@@ -67,69 +80,87 @@ export default function Profile() {
       if (Object.keys(updates).length > 0) {
         await api.updateMe(updates);
         await refreshUser();
-        setPassword('');
-        setMessage('DOSSIÊ ATUALIZADO');
+        setPassword("");
+        setMessage("DOSSIÊ ATUALIZADO");
         loadProfile();
       }
     } catch (err) {
-      setError(err.message || 'Falha na atualização');
+      setError(err.message || "Falha na atualização");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleSetNation(nation) {
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
     try {
       await api.setNation(nation);
       setSelectedNation(nation);
       await refreshUser();
       setMessage(`NAÇÃO DEFINIDA: ${nation}`);
     } catch (err) {
-      setError(err.message || 'Falha ao definir nação');
+      setError(err.message || "Falha ao definir nação");
     }
   }
 
   async function handleSetPortrait(portrait) {
-    setError('');
-    setMessage('');
+    setError("");
+    setMessage("");
     try {
       await api.setPortrait(portrait);
       setSelectedPortrait(portrait.toUpperCase());
       await refreshUser();
-      setMessage('RETRATO ATUALIZADO');
+      setMessage("RETRATO ATUALIZADO");
     } catch (err) {
-      setError(err.message || 'Falha ao definir retrato');
+      setError(err.message || "Falha ao definir retrato");
     }
   }
 
   async function handleDelete() {
-    if (!confirm('CONFIRMAR: Esta ação é irreversível. Excluir seu registro de comando?')) return;
+    if (
+      !confirm(
+        "CONFIRMAR: Esta ação é irreversível. Excluir seu registro de comando?",
+      )
+    )
+      return;
     try {
       await api.deleteMe();
       logout();
     } catch (err) {
-      setError(err.message || 'Falha na exclusão');
+      setError(err.message || "Falha na exclusão");
     }
   }
 
   const totalMissions = (profile?.wins ?? 0) + (profile?.losses ?? 0);
-  const winrate = totalMissions > 0 ? Math.round(((profile?.wins ?? 0) / totalMissions) * 100) : 0;
-  const availablePortraits = selectedNation ? NATION_PORTRAITS[selectedNation] || [] : [];
+  const winrate =
+    totalMissions > 0
+      ? Math.round(((profile?.wins ?? 0) / totalMissions) * 100)
+      : 0;
+  const availablePortraits = selectedNation
+    ? NATION_PORTRAITS[selectedNation] || []
+    : [];
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <PageHeader>
-        <HeaderIconButton icon="military_tech" title="Ranking" onClick={() => navigate('/ranking')} />
-        <HeaderIconButton icon="history" title="Histórico" onClick={() => navigate('/history')} />
+        <HeaderIconButton
+          icon="military_tech"
+          title="Ranking"
+          onClick={() => navigate("/ranking")}
+        />
+        <HeaderIconButton
+          icon="history"
+          title="Histórico"
+          onClick={() => navigate("/history")}
+        />
         <HeaderDivider />
         <BackToHQButton />
         <HeaderDivider />
         <HeaderIconButton icon="logout" title="Sair" onClick={logout} danger />
       </PageHeader>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-8">
+      <main className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 md:space-y-8">
         <AlertBanner type="success" message={message} />
         <AlertBanner type="error" message={error} />
 
@@ -147,7 +178,7 @@ export default function Profile() {
                 <div className="absolute top-3 right-[-10px] rotate-[-15deg] border-2 border-error px-2 py-0.5 bg-error/10">
                   <span
                     className="text-error text-[0.6rem] font-bold uppercase tracking-widest"
-                    style={{ fontFamily: 'var(--font-headline)' }}
+                    style={{ fontFamily: "var(--font-headline)" }}
                   >
                     TOP SECRET
                   </span>
@@ -155,9 +186,11 @@ export default function Profile() {
               </div>
               <p
                 className="text-[0.6rem] text-on-surface-variant uppercase tracking-widest mt-2 text-center"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               >
-                {selectedPortrait ? selectedPortrait.replace(/_/g, ' ') : 'SEM RETRATO ATRIBUÍDO'}
+                {selectedPortrait
+                  ? selectedPortrait.replace(/_/g, " ")
+                  : "SEM RETRATO ATRIBUÍDO"}
               </p>
             </div>
 
@@ -165,15 +198,15 @@ export default function Profile() {
             <div className="border-2 border-outline-variant bg-surface-container-high p-4 text-center">
               <p
                 className="text-lg text-on-surface font-bold uppercase tracking-wide"
-                style={{ fontFamily: 'var(--font-headline)' }}
+                style={{ fontFamily: "var(--font-headline)" }}
               >
-                {profile?.name || '—'}
+                {profile?.name || "—"}
               </p>
               <p
                 className="text-[0.65rem] text-on-surface-variant uppercase tracking-widest mt-1"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               >
-                ID: {profile?.id || '—'}
+                ID: {profile?.id || "—"}
               </p>
             </div>
           </div>
@@ -182,7 +215,7 @@ export default function Profile() {
           <div className="border-2 border-outline-variant bg-surface-container p-6 space-y-5">
             <h2
               className="stencil-text text-lg text-primary border-b-2 border-outline-variant pb-2"
-              style={{ fontFamily: 'var(--font-headline)', fontWeight: 800 }}
+              style={{ fontFamily: "var(--font-headline)", fontWeight: 800 }}
             >
               PERFIL DO COMANDANTE
             </h2>
@@ -192,23 +225,37 @@ export default function Profile() {
               <div>
                 <p
                   className="text-[0.65rem] text-on-surface-variant uppercase tracking-widest mb-0.5"
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                  style={{ fontFamily: "var(--font-mono)" }}
                 >
                   PATENTE
                 </p>
-                <p className="text-sm font-bold text-on-surface" style={{ fontFamily: 'var(--font-mono)' }}>
-                  {totalMissions >= 50 ? 'ALMIRANTE' : totalMissions >= 20 ? 'CAPITÃO' : totalMissions >= 5 ? 'TENENTE' : 'CADETE'}
+                <p
+                  className="text-sm font-bold text-on-surface"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {totalMissions >= 50
+                    ? "ALMIRANTE"
+                    : totalMissions >= 20
+                      ? "CAPITÃO"
+                      : totalMissions >= 5
+                        ? "TENENTE"
+                        : "CADETE"}
                 </p>
               </div>
               <div>
                 <p
                   className="text-[0.65rem] text-on-surface-variant uppercase tracking-widest mb-0.5"
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                  style={{ fontFamily: "var(--font-mono)" }}
                 >
                   SETOR OPERACIONAL
                 </p>
-                <p className="text-sm font-bold text-on-surface" style={{ fontFamily: 'var(--font-mono)' }}>
-                  {selectedNation ? `${NATION_FLAGS[selectedNation] || ''} ${selectedNation}` : 'NÃO DESIGNADO'}
+                <p
+                  className="text-sm font-bold text-on-surface"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {selectedNation
+                    ? `${NATION_FLAGS[selectedNation] || ""} ${NATION_LABELS[selectedNation] || selectedNation}`
+                    : "NÃO DESIGNADO"}
                 </p>
               </div>
             </div>
@@ -217,7 +264,7 @@ export default function Profile() {
             <div>
               <h3
                 className="text-xs text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-1 mb-3"
-                style={{ fontFamily: 'var(--font-headline)', fontWeight: 700 }}
+                style={{ fontFamily: "var(--font-headline)", fontWeight: 700 }}
               >
                 HISTÓRICO TÁTICO
               </h3>
@@ -225,13 +272,13 @@ export default function Profile() {
                 <div className="border border-outline-variant p-3 text-center bg-surface-container-high">
                   <p
                     className="text-2xl font-bold text-secondary"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     {totalMissions}
                   </p>
                   <p
                     className="text-[0.6rem] text-on-surface-variant uppercase tracking-widest mt-1"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     MISSÕES
                   </p>
@@ -239,13 +286,13 @@ export default function Profile() {
                 <div className="border border-outline-variant p-3 text-center bg-surface-container-high">
                   <p
                     className="text-2xl font-bold text-secondary"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     {winrate}%
                   </p>
                   <p
                     className="text-[0.6rem] text-on-surface-variant uppercase tracking-widest mt-1"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     VITÓRIAS
                   </p>
@@ -253,13 +300,13 @@ export default function Profile() {
                 <div className="border border-outline-variant p-3 text-center bg-surface-container-high">
                   <p
                     className="text-2xl font-bold text-secondary"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     {profile?.wins ?? 0}
                   </p>
                   <p
                     className="text-[0.6rem] text-on-surface-variant uppercase tracking-widest mt-1"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
                     ELIMINAÇÕES
                   </p>
@@ -271,14 +318,14 @@ export default function Profile() {
             <div>
               <h3
                 className="text-xs text-on-surface-variant uppercase tracking-wider border-b border-outline-variant pb-1 mb-3"
-                style={{ fontFamily: 'var(--font-headline)', fontWeight: 700 }}
+                style={{ fontFamily: "var(--font-headline)", fontWeight: 700 }}
               >
                 NOTAS DO COMANDO CENTRAL
               </h3>
               <div className="border-l-4 border-primary/40 pl-4 py-2">
                 <p
                   className="text-sm italic text-on-surface-variant"
-                  style={{ fontFamily: 'var(--font-body)' }}
+                  style={{ fontFamily: "var(--font-body)" }}
                 >
                   {totalMissions === 0
                     ? '"Oficial recém-designado. Aguardando primeira missão de combate."'
@@ -294,7 +341,18 @@ export default function Profile() {
         </div>
 
         {/* Nation Selection */}
-        <SectionCard title={<>NAÇÃO — ALIANÇA {profile?.nation && <span className="text-xs text-on-surface-variant ml-2">(IRREVERSÍVEL)</span>}</>}>
+        <SectionCard
+          title={
+            <>
+              NAÇÃO — ALIANÇA{" "}
+              {profile?.nation && (
+                <span className="text-xs text-on-surface-variant ml-2">
+                  (IRREVERSÍVEL)
+                </span>
+              )}
+            </>
+          }
+        >
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {NATIONS.map((nation) => (
               <button
@@ -303,16 +361,18 @@ export default function Profile() {
                 disabled={!!profile?.nation}
                 className={`relative p-4 border-2 text-center transition-all ${
                   selectedNation === nation
-                    ? 'border-secondary bg-secondary/15 text-secondary'
-                    : 'border-outline-variant text-on-surface-variant hover:border-outline hover:bg-surface-container-high'
-                } ${profile?.nation && profile.nation !== nation ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    ? "border-secondary bg-secondary/15 text-secondary"
+                    : "border-outline-variant text-on-surface-variant hover:border-outline hover:bg-surface-container-high"
+                } ${profile?.nation && profile.nation !== nation ? "opacity-40 cursor-not-allowed" : ""}`}
               >
-                <span className="text-2xl block mb-1">{NATION_FLAGS[nation]}</span>
+                <span className="text-2xl block mb-1">
+                  {NATION_FLAGS[nation]}
+                </span>
                 <span
                   className="text-xs font-bold uppercase tracking-widest block"
-                  style={{ fontFamily: 'var(--font-headline)' }}
+                  style={{ fontFamily: "var(--font-headline)" }}
                 >
-                  {nation}
+                  {NATION_LABELS[nation] || nation}
                 </span>
                 {selectedNation === nation && (
                   <span className="absolute top-1 right-1 material-symbols-outlined text-secondary text-sm">
@@ -334,8 +394,8 @@ export default function Profile() {
                   onClick={() => handleSetPortrait(portrait)}
                   className={`relative p-4 border-2 flex flex-col items-center gap-2 transition-all ${
                     selectedPortrait === portrait
-                      ? 'border-secondary bg-secondary/15'
-                      : 'border-outline-variant hover:border-outline hover:bg-surface-container-high'
+                      ? "border-secondary bg-secondary/15"
+                      : "border-outline-variant hover:border-outline hover:bg-surface-container-high"
                   }`}
                 >
                   {selectedPortrait === portrait && (
@@ -350,9 +410,9 @@ export default function Profile() {
                   </div>
                   <span
                     className="text-[0.6rem] text-on-surface-variant uppercase tracking-wider"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
-                    {portrait.replace(/_/g, ' ')}
+                    {portrait.replace(/_/g, " ")}
                   </span>
                 </button>
               ))}
@@ -366,7 +426,7 @@ export default function Profile() {
             <div>
               <label
                 className="text-xs text-on-surface-variant uppercase tracking-widest block mb-1"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               >
                 Nome do Comandante
               </label>
@@ -375,13 +435,13 @@ export default function Profile() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-surface-container-low border-2 border-outline-variant px-4 py-2 text-on-surface outline-none focus:border-primary"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               />
             </div>
             <div>
               <label
                 className="text-xs text-on-surface-variant uppercase tracking-widest block mb-1"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               >
                 Novo Código de Acesso
               </label>
@@ -391,25 +451,27 @@ export default function Profile() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Deixe vazio para manter o atual"
                 className="w-full bg-surface-container-low border-2 border-outline-variant px-4 py-2 text-on-surface outline-none focus:border-primary placeholder:text-on-surface-variant/50"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               />
             </div>
-            <button type="submit" disabled={loading} className="btn-primary text-sm">
-              {loading ? 'PROCESSANDO...' : 'ATUALIZAR DOSSIÊ'}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary text-sm"
+            >
+              {loading ? "PROCESSANDO..." : "ATUALIZAR DOSSIÊ"}
             </button>
           </form>
         </SectionCard>
 
         {/* Danger Zone */}
-        <SectionCard
-          title="ZONA DE PERIGO — IRREVERSÍVEL"
-          variant="danger"
-        >
+        <SectionCard title="ZONA DE PERIGO — IRREVERSÍVEL" variant="danger">
           <p
             className="text-on-surface-variant text-sm mb-4"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            style={{ fontFamily: "var(--font-mono)" }}
           >
-            ESTA AÇÃO APAGARÁ PERMANENTEMENTE SEU REGISTRO DE COMANDO E TODOS OS DADOS ASSOCIADOS.
+            ESTA AÇÃO APAGARÁ PERMANENTEMENTE SEU REGISTRO DE COMANDO E TODOS OS
+            DADOS ASSOCIADOS.
           </p>
           <button onClick={handleDelete} className="btn-danger text-sm">
             EXCLUIR REGISTRO DE COMANDO
@@ -417,12 +479,14 @@ export default function Profile() {
         </SectionCard>
       </main>
 
-      <BottomNav items={[
-        { icon: 'home', label: 'HQ', path: '/' },
-        { icon: 'military_tech', label: 'Rank', path: '/ranking' },
-        { icon: 'history', label: 'Hist', path: '/history' },
-        { icon: 'person', label: 'Perfil', path: '/profile' },
-      ]} />
+      <BottomNav
+        items={[
+          { icon: "home", label: "HQ", path: "/" },
+          { icon: "military_tech", label: "Rank", path: "/ranking" },
+          { icon: "history", label: "Hist", path: "/history" },
+          { icon: "person", label: "Perfil", path: "/profile" },
+        ]}
+      />
     </div>
   );
 }

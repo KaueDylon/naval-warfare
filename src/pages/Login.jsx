@@ -27,7 +27,7 @@ export default function Login() {
     <div className="min-h-screen tactical-grid-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Cartão Dossiê */}
-        <div className="bg-[#ebe2c9] text-[#171305] p-8 relative">
+        <div className="bg-[#ebe2c9] text-[#171305] p-6 sm:p-8 relative">
           {/* Carimbo TOP SECRET */}
           <div className="absolute top-4 right-4 border-4 border-red-700/50 px-4 py-2 rotate-[-6deg]">
             <span

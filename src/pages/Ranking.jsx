@@ -75,7 +75,7 @@ export default function Ranking() {
         <div className="dispatch-border overflow-hidden shadow-2xl">
           {/* Cabeçalho */}
           <div
-            className="grid grid-cols-[50px_1fr_80px_60px_60px_70px] gap-2 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
+            className="hidden sm:grid grid-cols-[40px_1fr_70px_50px_50px_65px] gap-2 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">#</span>
@@ -98,25 +98,25 @@ export default function Ranking() {
                 return (
                   <div
                     key={player.playerId || index}
-                    className="grid grid-cols-[50px_1fr_80px_60px_60px_70px] gap-2 px-4 py-3 items-center hover:bg-surface-container-high transition-colors"
+                    className="flex sm:grid sm:grid-cols-[40px_1fr_70px_50px_50px_65px] gap-2 px-4 py-3 items-center hover:bg-surface-container-high transition-colors"
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
-                    <span className={`text-sm font-bold ${rank <= 3 ? 'text-secondary' : 'text-on-surface-variant'}`}>
+                    <span className={`text-sm font-bold shrink-0 w-8 ${rank <= 3 ? 'text-secondary' : 'text-on-surface-variant'}`}>
                       {rank <= 3 ? '★' : ''}{rank}
                     </span>
-                    <span className="text-on-surface text-sm truncate">
+                    <span className="text-on-surface text-sm truncate flex-1">
                       {player.name}
                     </span>
-                    <span className="text-primary text-xs">
+                    <span className="text-primary text-xs shrink-0 hidden sm:block">
                       {player.nation || '—'}
                     </span>
-                    <span className="text-secondary text-sm text-center">
+                    <span className="text-secondary text-sm text-center shrink-0 hidden sm:block">
                       {player.wins ?? 0}
                     </span>
-                    <span className="text-error text-sm text-center">
+                    <span className="text-error text-sm text-center shrink-0 hidden sm:block">
                       {player.losses ?? 0}
                     </span>
-                    <span className="text-on-surface text-sm text-right font-bold">
+                    <span className="text-on-surface text-sm text-right font-bold shrink-0 ml-auto sm:ml-0">
                       {player.winrate != null ? `${player.winrate.toFixed(1)}%` : '—'}
                     </span>
                   </div>

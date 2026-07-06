@@ -126,7 +126,7 @@ export default function Room() {
                   Código da Operação
                 </p>
                 <p
-                  className="text-4xl text-secondary font-bold tracking-[0.4em]"
+                  className="text-2xl sm:text-4xl text-secondary font-bold tracking-[0.3em] sm:tracking-[0.4em]"
                   style={{ fontFamily: 'var(--font-mono)' }}
                 >
                   {room?.code || '—'}

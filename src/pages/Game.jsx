@@ -374,9 +374,9 @@ function SetupPhase({
   onPlaceShip, onClear, onReady, myReady, opponentReady,
 }) {
   return (
-    <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 h-full">
+    <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
       {/* Main Board Area */}
-      <section className="flex-1 flex flex-col">
+      <section className="flex-1 flex flex-col min-w-0">
         <div className="mb-4 flex justify-between items-end border-b-2 border-outline pb-2">
           <div>
             <h1
@@ -462,8 +462,8 @@ function SetupPhase({
       </section>
 
       {/* Right Panel - Vessel Manifest */}
-      <aside className="w-full lg:w-72 bg-surface-container border-2 border-outline flex flex-col shrink-0">
-        <div className="p-4 border-b-2 border-outline bg-surface-container-high">
+      <aside className="w-full lg:w-64 xl:w-72 bg-surface-container border-2 border-outline flex flex-col shrink-0">
+        <div className="p-3 lg:p-4 border-b-2 border-outline bg-surface-container-high">
           <h3
             className="stencil-text text-on-surface text-sm"
             style={{ fontFamily: 'var(--font-headline)' }}
@@ -474,7 +474,7 @@ function SetupPhase({
             AGUARDANDO POSICIONAMENTO
           </p>
         </div>
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        <div className="flex lg:flex-col flex-row overflow-x-auto lg:overflow-y-auto p-2 lg:p-3 gap-2 lg:gap-3 lg:flex-1">
           {ships.map((ship) => {
             const isPlaced = placedShips.includes(ship.id);
             const isSelected = selectedShip?.id === ship.id;
@@ -483,7 +483,7 @@ function SetupPhase({
                 key={ship.id}
                 onClick={() => !isPlaced && !myReady && setSelectedShip(isSelected ? null : ship)}
                 disabled={isPlaced || myReady}
-                className={`w-full p-3 border-2 text-left transition-all relative ${
+                className={`shrink-0 lg:w-full w-32 p-2 lg:p-3 border-2 text-left transition-all relative ${
                   isSelected
                     ? 'border-secondary bg-secondary/10'
                     : isPlaced
@@ -535,7 +535,7 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Battle Header */}
-      <div className="flex justify-between items-end border-b-2 border-outline pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-outline pb-4 gap-2">
         <div className="flex flex-col">
           <span className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
             Status de Combate
@@ -565,7 +565,7 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
       </div>
 
       {/* Tactical Grids */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* My Fleet */}
         <div className="border-l-4 border-primary pl-0">
           <Board
