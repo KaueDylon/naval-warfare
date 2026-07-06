@@ -28,13 +28,13 @@ export default function Register() {
       <div className="w-full max-w-md">
         {/* Dossier Card */}
         <div className="bg-[#ebe2c9] text-[#171305] p-8 relative">
-          {/* Classified Stamp */}
-          <div className="absolute top-4 right-4 border-2 border-red-700 px-3 py-1 rotate-[-6deg]">
+          {/* TOP SECRET Stamp */}
+          <div className="absolute top-4 right-4 border-4 border-red-700/50 px-4 py-2 rotate-[-6deg]">
             <span
-              className="text-red-700 text-xs font-bold tracking-widest"
+              className="text-red-700/50 text-lg font-bold tracking-widest"
               style={{ fontFamily: 'var(--font-headline)' }}
             >
-              CLASSIFIED
+              TOP SECRET
             </span>
           </div>
 
