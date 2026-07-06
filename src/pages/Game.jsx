@@ -531,7 +531,6 @@ function SetupPhase({
 // ===================== PLAYING PHASE =====================
 function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hoveredCell, setHoveredCell }) {
   const logEndRef = useRef(null);
-  useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [battleLog]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
