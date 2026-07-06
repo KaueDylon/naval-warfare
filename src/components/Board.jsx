@@ -2,30 +2,29 @@ export default function Board({
   grid,
   onCellClick,
   onCellHover,
+  onMouseLeave,
   isOpponent,
   disabled,
   title,
-  // Setup ghost preview props
   ghostShip = null,   // { size, horizontal }
   hoveredCell = null, // { row, col }
 }) {
   const rows = 'ABCDEFGHIJ'.split('');
   const cols = Array.from({ length: 10 }, (_, i) => i + 1);
 
-  // Compute which cells the ghost ship would occupy
+  // Returns Set of "row-col" strings for the ghost preview
   function getGhostCells() {
     if (!ghostShip || !hoveredCell || isOpponent) return new Set();
     const { size, horizontal } = ghostShip;
     const { row, col } = hoveredCell;
     const cells = new Set();
-    let valid = true;
     for (let i = 0; i < size; i++) {
       const r = horizontal ? row : row + i;
       const c = horizontal ? col + i : col;
-      if (r >= 10 || c >= 10) { valid = false; break; }
+      if (r >= 10 || c >= 10) return new Set(); // out of bounds — show nothing, flagged by isGhostValid
       cells.add(`${r}-${c}`);
     }
-    return valid ? cells : new Set([`invalid-${row}-${col}`]);
+    return cells;
   }
 
   function isGhostValid() {
@@ -36,7 +35,7 @@ export default function Board({
       const r = horizontal ? row : row + i;
       const c = horizontal ? col + i : col;
       if (r >= 10 || c >= 10) return false;
-      if (grid?.[r]?.[c] === 1) return false; // overlaps existing ship
+      if ((grid?.[r]?.[c] ?? 0) === 1) return false;
     }
     return true;
   }
@@ -44,33 +43,48 @@ export default function Board({
   const ghostCells = getGhostCells();
   const ghostValid = isGhostValid();
 
+  // Use inline styles for ghost colors — Tailwind purges dynamic class names at build time
+  const GHOST_BG     = ghostValid ? 'rgba(218,199,105,0.28)' : 'rgba(255,180,171,0.28)';
+  const GHOST_BORDER = ghostValid ? 'rgba(218,199,105,0.75)' : 'rgba(255,180,171,0.75)';
+
+  function getCellStyle(value, rowIdx, colIdx) {
+    if (ghostCells.has(`${rowIdx}-${colIdx}`)) {
+      return {
+        backgroundColor: GHOST_BG,
+        outline: `2px solid ${GHOST_BORDER}`,
+        outlineOffset: '-2px',
+        position: 'relative',
+        zIndex: 5,
+      };
+    }
+    if (value === 3) return { backgroundColor: 'rgba(255,180,171,0.08)' };
+    if (value === 1 && !isOpponent) return { backgroundColor: 'rgba(196,202,167,0.15)' };
+    return {};
+  }
+
   function getCellContent(value) {
     if (value === 2) {
       return (
-        <span className="material-symbols-outlined text-on-surface-variant/40 text-sm" style={{ fontVariationSettings: "'opsz' 20" }}>
+        <span
+          className="material-symbols-outlined text-on-surface-variant/40 text-sm"
+          style={{ fontVariationSettings: "'opsz' 20" }}
+        >
           close
         </span>
       );
     }
     if (value === 3) {
-      return (
-        <div className="w-3 h-3 bg-error shadow-[0_0_10px_rgba(255,180,171,0.6)]"></div>
-      );
+      return <div className="w-3 h-3 bg-error shadow-[0_0_10px_rgba(255,180,171,0.6)]" />;
     }
     if (value === 1 && !isOpponent) {
-      return <div className="w-full h-full bg-primary/20"></div>;
+      return <div className="w-full h-full bg-primary/20" />;
     }
     return null;
   }
 
-  function getCellBg(value, rowIdx, colIdx) {
-    const key = `${rowIdx}-${colIdx}`;
-    if (ghostCells.has(key)) {
-      return ghostValid ? 'bg-secondary/30' : 'bg-error/30';
-    }
-    if (value === 3) return 'bg-error/10';
-    if (value === 1 && !isOpponent) return 'bg-primary/15';
-    return '';
+  function handleBoardMouseLeave() {
+    if (onCellHover) onCellHover(null, null);
+    if (onMouseLeave) onMouseLeave();
   }
 
   return (
@@ -85,9 +99,12 @@ export default function Board({
           </h3>
         </div>
       )}
-      <div className="aspect-square bg-surface-container border-2 border-outline relative p-2 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
-        {/* Scanline overlay */}
-        <div className="scanline-overlay"></div>
+      <div
+        className="aspect-square bg-surface-container border-2 border-outline relative p-2 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]"
+        onMouseLeave={handleBoardMouseLeave}
+      >
+        {/* Scanline overlay — pointer-events-none so it doesn't swallow mouse events */}
+        <div className="scanline-overlay pointer-events-none" />
 
         {/* Grid */}
         <div
@@ -98,7 +115,7 @@ export default function Board({
           }}
         >
           {/* Empty corner */}
-          <div></div>
+          <div />
 
           {/* Column headers */}
           {cols.map((col) => (
@@ -124,37 +141,27 @@ export default function Board({
 
               {/* Cells */}
               {cols.map((col, colIdx) => {
-                const value = grid?.[rowIdx]?.[colIdx] ?? 0;
-                const canClick = isOpponent && !disabled && (value === 0 || value === 1);
+                const value  = grid?.[rowIdx]?.[colIdx] ?? 0;
                 const isAttacked = value === 2 || value === 3;
-                const isGhostCell = ghostCells.has(`${rowIdx}-${colIdx}`);
+                const canAttack  = isOpponent && !disabled && !isAttacked;
+                const canPlace   = !isOpponent && !disabled && !!ghostShip;
+                const interactive = canAttack || canPlace;
 
                 return (
                   <div
                     key={`${row}${col}`}
-                    className={`
-                      border flex items-center justify-center relative transition-colors
-                      ${isOpponent ? 'border-secondary/20' : 'border-outline/10'}
-                      ${getCellBg(value, rowIdx, colIdx)}
-                      ${canClick ? 'cursor-crosshair hover:bg-secondary/20' : ''}
-                      ${!isOpponent && ghostShip && !disabled ? 'cursor-crosshair' : ''}
-                      ${isGhostCell ? 'z-10' : ''}
-                    `}
+                    className={`border flex items-center justify-center relative ${
+                      isOpponent ? 'border-secondary/20' : 'border-outline/10'
+                    } ${interactive ? 'cursor-crosshair' : ''}`}
+                    style={getCellStyle(value, rowIdx, colIdx)}
                     onClick={() => {
-                      if (canClick && onCellClick) {
-                        onCellClick(rowIdx, colIdx);
-                      } else if (!isOpponent && onCellClick && !disabled) {
-                        onCellClick(rowIdx, colIdx);
-                      }
+                      if (interactive && onCellClick) onCellClick(rowIdx, colIdx);
                     }}
-                    onMouseEnter={() => onCellHover && onCellHover(rowIdx, colIdx)}
+                    onMouseEnter={() => {
+                      if (!disabled && onCellHover) onCellHover(rowIdx, colIdx);
+                    }}
                   >
                     {getCellContent(value)}
-                    {isGhostCell && (
-                      <div
-                        className={`absolute inset-0 border-2 ${ghostValid ? 'border-secondary/60' : 'border-error/60'}`}
-                      />
-                    )}
                   </div>
                 );
               })}

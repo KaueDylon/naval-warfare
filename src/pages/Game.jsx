@@ -422,7 +422,7 @@ function SetupPhase({
             <Board
               grid={myGrid}
               onCellClick={onPlaceShip}
-              onCellHover={!myReady ? setHoveredCell : undefined}
+              onCellHover={!myReady ? (r, c) => setHoveredCell(r != null ? { row: r, col: c } : null) : undefined}
               isOpponent={false}
               disabled={myReady}
               ghostShip={selectedShip && !myReady ? { size: selectedShip.size, horizontal } : null}
@@ -595,14 +595,11 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
         </div>
 
         {/* Enemy Waters */}
-        <div
-          className="border-l-4 border-secondary pl-0"
-          onMouseLeave={() => setHoveredCell(null)}
-        >
+        <div className="border-l-4 border-secondary pl-0">
           <Board
             grid={enemyGrid}
             onCellClick={(row, col) => { if (isMyTurn) onAttack(row, col); }}
-            onCellHover={(row, col) => setHoveredCell({ row, col })}
+            onCellHover={(row, col) => setHoveredCell(row != null ? { row, col } : null)}
             isOpponent={true}
             disabled={!isMyTurn}
             title="ENEMY WATERS"
