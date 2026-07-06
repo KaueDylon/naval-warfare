@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import AlertBanner from '../components/AlertBanner';
 
 export default function Register() {
   const { register } = useAuth();
@@ -17,7 +18,7 @@ export default function Register() {
     try {
       await register(name, email, password);
     } catch (err) {
-      setError(err.message || 'Enlistment failed');
+      setError(err.message || 'Falha no alistamento');
     } finally {
       setLoading(false);
     }
@@ -26,9 +27,9 @@ export default function Register() {
   return (
     <div className="min-h-screen tactical-grid-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Dossier Card */}
+        {/* Cartão Dossiê */}
         <div className="bg-[#ebe2c9] text-[#171305] p-8 relative">
-          {/* TOP SECRET Stamp */}
+          {/* Carimbo TOP SECRET */}
           <div className="absolute top-4 right-4 border-4 border-red-700/50 px-4 py-2 rotate-[-6deg]">
             <span
               className="text-red-700/50 text-lg font-bold tracking-widest"
@@ -38,7 +39,7 @@ export default function Register() {
             </span>
           </div>
 
-          {/* Title */}
+          {/* Título */}
           <div className="text-center mb-8 mt-4">
             <h1
               className="text-2xl font-extrabold tracking-wider mb-2"
@@ -50,81 +51,75 @@ export default function Register() {
               className="text-sm uppercase tracking-widest text-[#171305]/70"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
-              Enlistment Form
+              Formulário de Alistamento
             </p>
           </div>
 
-          {/* Form */}
+          {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-900/10 border border-red-700 p-3">
-                <p className="text-red-700 text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                  {error}
-                </p>
-              </div>
-            )}
+            <AlertBanner type="form-error" message={error} />
 
-            {/* Name */}
+            {/* Nome */}
             <div className="flex items-center gap-3 border-b-2 border-[#171305]/30 pb-2">
               <span className="material-symbols-outlined text-[#171305]/60">badge</span>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="COMMANDER IDENTITY"
+                placeholder="Nome do comandante"
                 required
-                className="flex-1 bg-transparent border-none outline-none text-sm uppercase tracking-wide placeholder:text-[#171305]/40"
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-[#171305]/40"
                 style={{ fontFamily: 'var(--font-mono)' }}
               />
             </div>
 
-            {/* Email */}
+            {/* E-mail */}
             <div className="flex items-center gap-3 border-b-2 border-[#171305]/30 pb-2">
               <span className="material-symbols-outlined text-[#171305]/60">mail</span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="CALLSIGN (EMAIL)"
+                placeholder="Indicativo (e-mail)"
                 required
-                className="flex-1 bg-transparent border-none outline-none text-sm uppercase tracking-wide placeholder:text-[#171305]/40"
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-[#171305]/40"
                 style={{ fontFamily: 'var(--font-mono)' }}
               />
             </div>
 
-            {/* Password */}
+            {/* Senha */}
             <div className="flex items-center gap-3 border-b-2 border-[#171305]/30 pb-2">
               <span className="material-symbols-outlined text-[#171305]/60">lock</span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="ACCESS CODE"
+                placeholder="Código de acesso"
                 required
-                className="flex-1 bg-transparent border-none outline-none text-sm uppercase tracking-wide placeholder:text-[#171305]/40"
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-[#171305]/40"
                 style={{ fontFamily: 'var(--font-mono)' }}
               />
             </div>
 
-            {/* Submit */}
+            {/* Enviar */}
             <button
               type="submit"
               disabled={loading}
               className="w-full btn-primary text-sm"
             >
-              {loading ? 'PROCESSING ENLISTMENT...' : 'ENLIST FOR DUTY'}
+              {loading ? 'PROCESSANDO ALISTAMENTO...' : 'ALISTAR-SE'}
             </button>
           </form>
 
-          {/* Login Link */}
+          {/* Link de Login */}
           <div className="mt-6 text-center">
             <p className="text-xs text-[#171305]/60" style={{ fontFamily: 'var(--font-mono)' }}>
-              ALREADY ENLISTED?{' '}
+              JÁ ALISTADO?{' '}
               <Link
                 to="/login"
                 className="text-[#171305] font-bold underline hover:text-[#545a3e]"
               >
-                REPORT TO COMMAND
+                REPORTAR AO COMANDO
               </Link>
             </p>
           </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import AlertBanner from '../components/AlertBanner';
 
 export default function Login() {
   const { login } = useAuth();
@@ -16,7 +17,7 @@ export default function Login() {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err.message || 'Authorization failed');
+      setError(err.message || 'Falha na autorização');
     } finally {
       setLoading(false);
     }
@@ -25,9 +26,9 @@ export default function Login() {
   return (
     <div className="min-h-screen tactical-grid-bg flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Dossier Card */}
+        {/* Cartão Dossiê */}
         <div className="bg-[#ebe2c9] text-[#171305] p-8 relative">
-          {/* TOP SECRET Stamp */}
+          {/* Carimbo TOP SECRET */}
           <div className="absolute top-4 right-4 border-4 border-red-700/50 px-4 py-2 rotate-[-6deg]">
             <span
               className="text-red-700/50 text-lg font-bold tracking-widest"
@@ -37,7 +38,7 @@ export default function Login() {
             </span>
           </div>
 
-          {/* Title */}
+          {/* Título */}
           <div className="text-center mb-8 mt-4">
             <h1
               className="text-2xl font-extrabold tracking-wider mb-2"
@@ -49,67 +50,61 @@ export default function Login() {
               className="text-sm uppercase tracking-widest text-[#171305]/70"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
-              Theatre Authorization
+              Autorização de Teatro
             </p>
           </div>
 
-          {/* Form */}
+          {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
-              <div className="bg-red-900/10 border border-red-700 p-3">
-                <p className="text-red-700 text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                  {error}
-                </p>
-              </div>
-            )}
+            <AlertBanner type="form-error" message={error} />
 
-            {/* Email */}
+            {/* E-mail */}
             <div className="flex items-center gap-3 border-b-2 border-[#171305]/30 pb-2">
               <span className="material-symbols-outlined text-[#171305]/60">mail</span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="CALLSIGN (EMAIL)"
+                placeholder="Indicativo (e-mail)"
                 required
-                className="flex-1 bg-transparent border-none outline-none text-sm uppercase tracking-wide placeholder:text-[#171305]/40"
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-[#171305]/40"
                 style={{ fontFamily: 'var(--font-mono)' }}
               />
             </div>
 
-            {/* Password */}
+            {/* Senha */}
             <div className="flex items-center gap-3 border-b-2 border-[#171305]/30 pb-2">
               <span className="material-symbols-outlined text-[#171305]/60">lock</span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="ACCESS CODE"
+                placeholder="Código de acesso"
                 required
-                className="flex-1 bg-transparent border-none outline-none text-sm uppercase tracking-wide placeholder:text-[#171305]/40"
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-[#171305]/40"
                 style={{ fontFamily: 'var(--font-mono)' }}
               />
             </div>
 
-            {/* Submit */}
+            {/* Enviar */}
             <button
               type="submit"
               disabled={loading}
               className="w-full btn-primary text-sm"
             >
-              {loading ? 'TRANSMITTING...' : 'DEPLOY COMMAND'}
+              {loading ? 'TRANSMITINDO...' : 'ACESSAR COMANDO'}
             </button>
           </form>
 
-          {/* Register Link */}
+          {/* Link de Cadastro */}
           <div className="mt-6 text-center">
             <p className="text-xs text-[#171305]/60" style={{ fontFamily: 'var(--font-mono)' }}>
-              NO CLEARANCE?{' '}
+              SEM CREDENCIAL?{' '}
               <Link
                 to="/register"
                 className="text-[#171305] font-bold underline hover:text-[#545a3e]"
               >
-                REQUEST AUTHORIZATION
+                SOLICITAR AUTORIZAÇÃO
               </Link>
             </p>
           </div>
