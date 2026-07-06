@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import * as api from '../services/api';
+import PageHeader, { BackToHQButton } from '../components/PageHeader';
+import LoadingState from '../components/LoadingState';
+import EmptyState from '../components/EmptyState';
 
 export default function Ranking() {
-  const navigate = useNavigate();
   const [rankings, setRankings] = useState([]);
   const [myRanking, setMyRanking] = useState(null);
   const [offset, setOffset] = useState(0);
@@ -21,7 +22,7 @@ export default function Ranking() {
       const data = await api.getRanking(limit, offset);
       setRankings(data || []);
     } catch (err) {
-      console.error('Failed to load rankings:', err);
+      console.error('Falha ao carregar ranking:', err);
     } finally {
       setLoading(false);
     }
@@ -32,35 +33,18 @@ export default function Ranking() {
       const data = await api.getMyRanking();
       setMyRanking(data);
     } catch (err) {
-      console.error('Failed to load my ranking:', err);
+      console.error('Falha ao carregar minha posição:', err);
     }
   }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b-2 border-outline-variant px-6 h-16 flex items-center bg-surface-container-lowest">
-        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
-          <h1
-            className="text-xl stencil-text text-primary"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            COMMAND HIERARCHY
-          </h1>
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
-          >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
-            <span className="text-xs uppercase tracking-wider" style={{ fontFamily: 'var(--font-mono)' }}>
-              Return to HQ
-            </span>
-          </button>
-        </div>
-      </header>
+      <PageHeader>
+        <BackToHQButton />
+      </PageHeader>
 
       <main className="flex-1 max-w-5xl mx-auto w-full p-6 space-y-6">
-        {/* My Position Card */}
+        {/* Minha Posição */}
         {myRanking !== null && myRanking !== -1 && (
           <div className="dispatch-border p-5 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -69,7 +53,7 @@ export default function Ranking() {
               </div>
               <div>
                 <p className="text-[10px] text-on-surface-variant uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>
-                  Your Global Position
+                  Sua Posição Global
                 </p>
                 <p className="text-3xl text-secondary font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
                   #{typeof myRanking === 'number' ? myRanking : myRanking.position ?? '—'}
@@ -82,40 +66,31 @@ export default function Ranking() {
         {myRanking === -1 && (
           <div className="dispatch-border p-4 text-center">
             <p className="text-on-surface-variant text-xs uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
-              NOT YET RANKED — MINIMUM 5 MISSIONS REQUIRED
+              SEM CLASSIFICAÇÃO — MÍNIMO DE 5 MISSÕES NECESSÁRIO
             </p>
           </div>
         )}
 
-        {/* Rankings Table */}
+        {/* Tabela de Ranking */}
         <div className="dispatch-border overflow-hidden shadow-2xl">
-          {/* Table Header */}
+          {/* Cabeçalho */}
           <div
             className="grid grid-cols-[50px_1fr_80px_60px_60px_70px] gap-2 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">#</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Commander</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Nation</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">W</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">L</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">Rate</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Comandante</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Nação</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">V</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">D</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">Taxa</span>
           </div>
 
-          {/* Body */}
+          {/* Corpo */}
           {loading ? (
-            <div className="p-10 text-center">
-              <p className="text-on-surface-variant text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                LOADING INTELLIGENCE...
-              </p>
-            </div>
+            <LoadingState message="CARREGANDO INTELIGÊNCIA..." />
           ) : rankings.length === 0 ? (
-            <div className="p-10 text-center">
-              <span className="material-symbols-outlined text-4xl text-outline-variant block mb-2">leaderboard</span>
-              <p className="text-on-surface-variant text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                NO RECORDS FOUND
-              </p>
-            </div>
+            <EmptyState icon="leaderboard" message="NENHUM REGISTRO ENCONTRADO" />
           ) : (
             <div className="divide-y divide-outline-variant">
               {rankings.map((player, index) => {
@@ -150,14 +125,14 @@ export default function Ranking() {
             </div>
           )}
 
-          {/* Pagination */}
+          {/* Paginação */}
           <div className="border-t-2 border-outline-variant px-4 py-3 flex items-center justify-between bg-surface-container-high">
             <button
               onClick={() => setOffset(Math.max(0, offset - limit))}
               disabled={offset === 0}
               className="btn-secondary text-xs px-3 py-1 disabled:opacity-30"
             >
-              ← PREV
+              ← ANTERIOR
             </button>
             <span className="text-xs text-on-surface-variant" style={{ fontFamily: 'var(--font-mono)' }}>
               {offset + 1}—{offset + rankings.length}
@@ -167,7 +142,7 @@ export default function Ranking() {
               disabled={rankings.length < limit}
               className="btn-secondary text-xs px-3 py-1 disabled:opacity-30"
             >
-              NEXT →
+              PRÓXIMO →
             </button>
           </div>
         </div>

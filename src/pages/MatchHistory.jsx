@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';
+import PageHeader, { BackToHQButton } from '../components/PageHeader';
+import LoadingState from '../components/LoadingState';
+import EmptyState from '../components/EmptyState';
 
 export default function MatchHistory() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function MatchHistory() {
       const data = await api.getMatches();
       setMatches(data || []);
     } catch (err) {
-      console.error('Failed to load matches:', err);
+      console.error('Falha ao carregar partidas:', err);
     } finally {
       setLoading(false);
     }
@@ -43,55 +44,30 @@ export default function MatchHistory() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b-2 border-outline-variant px-6 h-16 flex items-center bg-surface-container-lowest">
-        <div className="max-w-4xl mx-auto w-full flex items-center justify-between">
-          <h1
-            className="text-xl stencil-text text-primary"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            OPERATION RECORDS
-          </h1>
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
-          >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
-            <span className="text-xs uppercase tracking-wider" style={{ fontFamily: 'var(--font-mono)' }}>
-              Return to HQ
-            </span>
-          </button>
-        </div>
-      </header>
+      <PageHeader>
+        <BackToHQButton />
+      </PageHeader>
 
       <main className="flex-1 max-w-4xl mx-auto w-full p-6">
         <div className="dispatch-border shadow-2xl overflow-hidden">
-          {/* Table Header */}
+          {/* Cabeçalho da Tabela */}
           <div
             className="grid grid-cols-[80px_1fr_140px] gap-4 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Result</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Operation Details</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">Date</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Resultado</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Detalhes da Operação</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">Data</span>
           </div>
 
           {loading ? (
-            <div className="p-10 text-center">
-              <p className="text-on-surface-variant text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                DECRYPTING RECORDS...
-              </p>
-            </div>
+            <LoadingState message="DECIFRANDO REGISTROS..." />
           ) : matches.length === 0 ? (
-            <div className="p-10 text-center">
-              <span className="material-symbols-outlined text-4xl text-outline-variant block mb-2">description</span>
-              <p className="text-on-surface-variant text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-                NO OPERATIONS ON RECORD
-              </p>
-              <p className="text-on-surface-variant/50 text-xs mt-1" style={{ fontFamily: 'var(--font-mono)' }}>
-                Complete missions to build your service record
-              </p>
-            </div>
+            <EmptyState
+              icon="description"
+              message="NENHUMA OPERAÇÃO REGISTRADA"
+              hint="Complete missões para construir seu histórico"
+            />
           ) : (
             <div className="divide-y divide-outline-variant">
               {matches.map((match, index) => {
@@ -101,7 +77,7 @@ export default function MatchHistory() {
                     key={match.matchId || index}
                     className="grid grid-cols-[80px_1fr_140px] gap-4 px-4 py-4 items-center hover:bg-surface-container-high transition-colors"
                   >
-                    {/* Result Badge */}
+                    {/* Badge de Resultado */}
                     <div
                       className={`text-center py-1.5 border-2 ${
                         victory
@@ -113,21 +89,21 @@ export default function MatchHistory() {
                         className="text-[10px] font-bold uppercase tracking-widest"
                         style={{ fontFamily: 'var(--font-headline)' }}
                       >
-                        {victory ? 'VICTORY' : 'DEFEAT'}
+                        {victory ? 'VITÓRIA' : 'DERROTA'}
                       </span>
                     </div>
 
-                    {/* Match Details */}
+                    {/* Detalhes */}
                     <div style={{ fontFamily: 'var(--font-mono)' }}>
                       <p className="text-on-surface text-sm flex items-center gap-2">
                         <span className="material-symbols-outlined text-sm text-outline">
                           {victory ? 'emoji_events' : 'dangerous'}
                         </span>
-                        Mission #{(match.matchId || '').slice(0, 8)}
+                        Missão #{(match.matchId || '').slice(0, 8)}
                       </p>
                     </div>
 
-                    {/* Date */}
+                    {/* Data */}
                     <div className="text-right">
                       <p className="text-on-surface-variant text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
                         {formatDate(match.playedAt)}
