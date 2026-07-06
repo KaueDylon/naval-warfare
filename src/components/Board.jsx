@@ -6,8 +6,9 @@ export default function Board({
   isOpponent,
   disabled,
   title,
-  ghostShip = null,   // { size, horizontal }
-  hoveredCell = null, // { row, col }
+  ghostShip = null,
+  hoveredCell = null,
+  sunkCells = new Set(), // Set de "row-col" — células de navios afundados
 }) {
   const rows = 'ABCDEFGHIJ'.split('');
   const cols = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -57,12 +58,19 @@ export default function Board({
         zIndex: 5,
       };
     }
+    if (sunkCells.has(`${rowIdx}-${colIdx}`)) {
+      return {
+        backgroundColor: 'rgba(255,140,0,0.18)',
+        outline: '2px solid rgba(255,140,0,0.6)',
+        outlineOffset: '-2px',
+      };
+    }
     if (value === 3) return { backgroundColor: 'rgba(255,180,171,0.08)' };
     if (value === 1 && !isOpponent) return { backgroundColor: 'rgba(196,202,167,0.15)' };
     return {};
   }
 
-  function getCellContent(value) {
+  function getCellContent(value, rowIdx, colIdx) {
     if (value === 2) {
       return (
         <span
@@ -74,7 +82,18 @@ export default function Board({
       );
     }
     if (value === 3) {
-      return <div className="w-3 h-3 bg-error shadow-[0_0_10px_rgba(255,180,171,0.6)]" />;
+      const isSunk = sunkCells.has(`${rowIdx}-${colIdx}`);
+      return (
+        <div
+          className="w-3 h-3 rounded-full"
+          style={{
+            backgroundColor: isSunk ? 'rgba(255,140,0,0.9)' : 'rgba(255,180,171,0.9)',
+            boxShadow: isSunk
+              ? '0 0 10px rgba(255,140,0,0.7)'
+              : '0 0 10px rgba(255,180,171,0.6)',
+          }}
+        />
+      );
     }
     if (value === 1 && !isOpponent) {
       return <div className="w-full h-full bg-primary/20" />;
@@ -161,7 +180,7 @@ export default function Board({
                       if (!disabled && onCellHover) onCellHover(rowIdx, colIdx);
                     }}
                   >
-                    {getCellContent(value)}
+                    {getCellContent(value, rowIdx, colIdx)}
                   </div>
                 );
               })}

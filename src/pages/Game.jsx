@@ -24,6 +24,9 @@ export default function Game() {
   const [phase, setPhase] = useState('SETUP');
   const [myGrid, setMyGrid] = useState(createEmptyGrid());
   const [enemyGrid, setEnemyGrid] = useState(createEmptyGrid());
+  const prevEnemyGridRef = useRef(createEmptyGrid());
+  const [sunkEnemyCells, setSunkEnemyCells] = useState(new Set()); // "row-col"
+  const [sunkMyCells, setSunkMyCells] = useState(new Set());
   const [currentTurn, setCurrentTurn] = useState(null);
   const [opponentId, setOpponentId] = useState(null);
   const [winner, setWinner] = useState(null);
@@ -161,10 +164,55 @@ export default function Game() {
       case 'HIT':
       case 'SUNK':
         if (isMyAttack) {
-          setEnemyGrid((prev) => { const c = prev.map(r => [...r]); c[row][col] = 3; return c; });
+          setEnemyGrid((prev) => {
+            const next = prev.map(r => [...r]);
+            next[row][col] = 3;
+            if (status === 'SUNK') {
+              // detecta células conectadas ao hit que também são 3 (navio afundado)
+              const newSunk = new Set();
+              const visited = new Set();
+              const stack = [[row, col]];
+              while (stack.length) {
+                const [r, c] = stack.pop();
+                const key = `${r}-${c}`;
+                if (visited.has(key)) continue;
+                visited.add(key);
+                if ((next[r]?.[c] ?? 0) === 3) {
+                  newSunk.add(key);
+                  [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  });
+                }
+              }
+              setSunkEnemyCells(prev2 => new Set([...prev2, ...newSunk]));
+            }
+            return next;
+          });
           addLog(`🎯 ${String.fromCharCode(65 + row)}${col + 1} — ${status === 'HIT' ? 'ACERTOU' : 'AFUNDOU'}!`);
         } else {
-          setMyGrid((prev) => { const c = prev.map(r => [...r]); c[row][col] = 3; return c; });
+          setMyGrid((prev) => {
+            const next = prev.map(r => [...r]);
+            next[row][col] = 3;
+            if (status === 'SUNK') {
+              const newSunk = new Set();
+              const visited = new Set();
+              const stack = [[row, col]];
+              while (stack.length) {
+                const [r, c] = stack.pop();
+                const key = `${r}-${c}`;
+                if (visited.has(key)) continue;
+                visited.add(key);
+                if ((next[r]?.[c] ?? 0) === 3) {
+                  newSunk.add(key);
+                  [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  });
+                }
+              }
+              setSunkMyCells(prev2 => new Set([...prev2, ...newSunk]));
+            }
+            return next;
+          });
           addLog(`💥 ATAQUE RECEBIDO — ${String.fromCharCode(65 + row)}${col + 1} — ${status === 'HIT' ? 'ACERTOU' : 'AFUNDOU'}`);
         }
         if (status === 'SUNK') addLog('🔥 EMBARCAÇÃO DESTRUÍDA');
@@ -338,6 +386,8 @@ export default function Game() {
             battleLog={battleLog}
             hoveredCell={hoveredCell}
             setHoveredCell={setHoveredCell}
+            sunkMyCells={sunkMyCells}
+            sunkEnemyCells={sunkEnemyCells}
           />
         )}
         {phase === 'FINISHED' && (
@@ -529,7 +579,7 @@ function SetupPhase({
 }
 
 // ===================== PLAYING PHASE =====================
-function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hoveredCell, setHoveredCell }) {
+function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hoveredCell, setHoveredCell, sunkMyCells, sunkEnemyCells }) {
   const logEndRef = useRef(null);
 
   return (
@@ -573,11 +623,22 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
             isOpponent={false}
             disabled={true}
             title="SUA FROTA"
+            sunkCells={sunkMyCells}
           />
         </div>
 
         {/* Enemy Waters */}
-        <div className="border-l-4 border-secondary pl-0">
+        <div className="border-l-4 border-secondary pl-0 relative">
+          {!isMyTurn && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[1px] pointer-events-none">
+              <div className="flex items-center gap-2 bg-surface-container-high border border-outline-variant px-4 py-2">
+                <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
+                <span className="text-xs text-on-surface-variant uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>
+                  Aguardando oponente...
+                </span>
+              </div>
+            </div>
+          )}
           <Board
             grid={enemyGrid}
             onCellClick={(row, col) => { if (isMyTurn) onAttack(row, col); }}
@@ -585,6 +646,7 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
             isOpponent={true}
             disabled={!isMyTurn}
             title="ÁGUAS INIMIGAS"
+            sunkCells={sunkEnemyCells}
           />
         </div>
       </div>
