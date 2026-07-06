@@ -1,18 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import * as api from '../services/api';
-import * as ws from '../services/websocket';
-import Board from '../components/Board';
-import PageHeader, { HeaderDivider } from '../components/PageHeader';
-import AlertBanner from '../components/AlertBanner';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import * as api from "../services/api";
+import * as ws from "../services/websocket";
+import Board from "../components/Board";
+import PageHeader, { HeaderDivider } from "../components/PageHeader";
+import AlertBanner from "../components/AlertBanner";
 
 const SHIPS = [
-  { name: 'Porta-Aviões', size: 5, id: 'carrier' },
-  { name: 'Navio de Guerra', size: 4, id: 'battleship' },
-  { name: 'Cruzador', size: 3, id: 'cruiser' },
-  { name: 'Submarino', size: 3, id: 'submarine' },
-  { name: 'Destroyer', size: 2, id: 'destroyer' },
+  { name: "Porta-Aviões", size: 5, id: "carrier" },
+  { name: "Encouraçado", size: 4, id: "battleship" },
+  { name: "Cruzador", size: 3, id: "cruiser" },
+  { name: "Submarino", size: 3, id: "submarine" },
+  { name: "Destroyer", size: 2, id: "destroyer" },
 ];
 
 export default function Game() {
@@ -21,7 +21,7 @@ export default function Game() {
   const { user, token } = useAuth();
   const connectedRef = useRef(false);
 
-  const [phase, setPhase] = useState('SETUP');
+  const [phase, setPhase] = useState("SETUP");
   const [myGrid, setMyGrid] = useState(createEmptyGrid());
   const [enemyGrid, setEnemyGrid] = useState(createEmptyGrid());
   const prevEnemyGridRef = useRef(createEmptyGrid());
@@ -42,7 +42,7 @@ export default function Game() {
 
   const [battleLog, setBattleLog] = useState([]);
   const [hoveredCell, setHoveredCell] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [connected, setConnected] = useState(false);
 
   function createEmptyGrid() {
@@ -56,7 +56,8 @@ export default function Game() {
       if (state.currentTurn) setCurrentTurn(state.currentTurn);
       if (state.winner) setWinner(state.winner);
 
-      const oppId = state.playerAId === user.id ? state.playerBId : state.playerAId;
+      const oppId =
+        state.playerAId === user.id ? state.playerBId : state.playerAId;
       setOpponentId(oppId);
 
       if (state.playerAId === user.id) {
@@ -67,7 +68,7 @@ export default function Game() {
         setOpponentReady(state.playerAReady || false);
       }
 
-      if (state.phase === 'PLAYING' || state.phase === 'FINISHED') {
+      if (state.phase === "PLAYING" || state.phase === "FINISHED") {
         const myBoard = await api.getBoard(gameId, user.id);
         setMyGrid(myBoard);
         if (oppId) {
@@ -76,8 +77,8 @@ export default function Game() {
         }
       }
     } catch (err) {
-      console.error('Failed to load game state:', err);
-      setError('Failed to load game state');
+      console.error("Failed to load game state:", err);
+      setError("Failed to load game state");
     }
   }, [gameId, user.id]);
 
@@ -91,13 +92,13 @@ export default function Game() {
 
   useEffect(() => {
     function onKeyDown(e) {
-      if (phase !== 'SETUP' || myReady) return;
-      if (e.key === 'r' || e.key === 'R') {
+      if (phase !== "SETUP" || myReady) return;
+      if (e.key === "r" || e.key === "R") {
         setHorizontal((h) => !h);
       }
     }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [phase, myReady]);
 
   function connectWs() {
@@ -108,44 +109,55 @@ export default function Game() {
         connectedRef.current = true;
         setConnected(true);
         ws.subscribePersistent(`/topic/game/${gameId}`, handleGameMessage);
-        ws.subscribePersistent('/user/queue/place-result', handlePlaceResult);
-        ws.subscribePersistent('/user/queue/errors', (msg) => {
-          setError(typeof msg === 'string' ? msg : msg.message || 'Erro desconhecido');
-          addLog(`ERRO: ${typeof msg === 'string' ? msg : msg.message}`);
+        ws.subscribePersistent("/user/queue/place-result", handlePlaceResult);
+        ws.subscribePersistent("/user/queue/errors", (msg) => {
+          setError(
+            typeof msg === "string" ? msg : msg.message || "Erro desconhecido",
+          );
+          addLog(`ERRO: ${typeof msg === "string" ? msg : msg.message}`);
         });
       },
       (err) => {
-        console.error('[Game] WS Error:', err);
+        console.error("[Game] WS Error:", err);
         connectedRef.current = false;
         setConnected(false);
-      }
+      },
     );
   }
 
   function handleGameMessage(message) {
     if (message.type) {
       switch (message.type) {
-        case 'PLAYER_READY':
+        case "PLAYER_READY":
           if (message.playerId === user.id) setMyReady(true);
           else setOpponentReady(true);
-          addLog(`Comandante ${message.playerId === user.id ? 'VOCÊ' : 'INIMIGO'} pronto para o combate`);
+          addLog(
+            `Comandante ${message.playerId === user.id ? "VOCÊ" : "INIMIGO"} pronto para o combate`,
+          );
           break;
-        case 'GAME_STARTED':
-          setPhase('PLAYING');
+        case "GAME_STARTED":
+          setPhase("PLAYING");
           setCurrentTurn(message.playerId);
-          addLog('⚓ TODOS OS POSTOS — INICIAR FOGO');
+          addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
           loadGameState();
           break;
-        case 'GAME_OVER':
-          setPhase('FINISHED');
+        case "GAME_OVER":
+          setPhase("FINISHED");
           setWinner(message.playerId);
-          addLog(`🏁 OPERAÇÃO ENCERRADA — ${message.playerId === user.id ? 'VITÓRIA' : 'DERROTA'}`);
+          addLog(
+            `🏁 OPERAÇÃO ENCERRADA — ${message.playerId === user.id ? "VITÓRIA" : "DERROTA"}`,
+          );
           break;
-        case 'PLAYER_SURRENDERED':
-          addLog(message.playerId !== user.id ? '⚐ INIMIGO SE RENDEU' : '⚐ VOCÊ ABANDONOU A MISSÃO');
+        case "PLAYER_SURRENDERED":
+          addLog(
+            message.playerId !== user.id
+              ? "⚐ INIMIGO SE RENDEU"
+              : "⚐ VOCÊ ABANDONOU A MISSÃO",
+          );
           break;
-        case 'PLAYER_DISCONNECTED':
-          if (message.playerId !== user.id) addLog('⚠ COMUNICAÇÕES INIMIGAS INTERROMPIDAS');
+        case "PLAYER_DISCONNECTED":
+          if (message.playerId !== user.id)
+            addLog("⚠ COMUNICAÇÕES INIMIGAS INTERROMPIDAS");
           break;
         default:
           break;
@@ -161,13 +173,13 @@ export default function Game() {
     if (nextTurn) setCurrentTurn(nextTurn);
 
     switch (status) {
-      case 'HIT':
-      case 'SUNK':
+      case "HIT":
+      case "SUNK":
         if (isMyAttack) {
           setEnemyGrid((prev) => {
-            const next = prev.map(r => [...r]);
+            const next = prev.map((r) => [...r]);
             next[row][col] = 3;
-            if (status === 'SUNK') {
+            if (status === "SUNK") {
               // detecta células conectadas ao hit que também são 3 (navio afundado)
               const newSunk = new Set();
               const visited = new Set();
@@ -179,21 +191,29 @@ export default function Game() {
                 visited.add(key);
                 if ((next[r]?.[c] ?? 0) === 3) {
                   newSunk.add(key);
-                  [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  [
+                    [r - 1, c],
+                    [r + 1, c],
+                    [r, c - 1],
+                    [r, c + 1],
+                  ].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
+                      stack.push([nr, nc]);
                   });
                 }
               }
-              setSunkEnemyCells(prev2 => new Set([...prev2, ...newSunk]));
+              setSunkEnemyCells((prev2) => new Set([...prev2, ...newSunk]));
             }
             return next;
           });
-          addLog(`🎯 ${String.fromCharCode(65 + row)}${col + 1} — ${status === 'HIT' ? 'ACERTOU' : 'AFUNDOU'}!`);
+          addLog(
+            `🎯 ${String.fromCharCode(65 + row)}${col + 1} — ${status === "HIT" ? "ACERTOU" : "AFUNDOU"}!`,
+          );
         } else {
           setMyGrid((prev) => {
-            const next = prev.map(r => [...r]);
+            const next = prev.map((r) => [...r]);
             next[row][col] = 3;
-            if (status === 'SUNK') {
+            if (status === "SUNK") {
               const newSunk = new Set();
               const visited = new Set();
               const stack = [[row, col]];
@@ -204,41 +224,59 @@ export default function Game() {
                 visited.add(key);
                 if ((next[r]?.[c] ?? 0) === 3) {
                   newSunk.add(key);
-                  [[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([nr,nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  [
+                    [r - 1, c],
+                    [r + 1, c],
+                    [r, c - 1],
+                    [r, c + 1],
+                  ].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
+                      stack.push([nr, nc]);
                   });
                 }
               }
-              setSunkMyCells(prev2 => new Set([...prev2, ...newSunk]));
+              setSunkMyCells((prev2) => new Set([...prev2, ...newSunk]));
             }
             return next;
           });
-          addLog(`💥 ATAQUE RECEBIDO — ${String.fromCharCode(65 + row)}${col + 1} — ${status === 'HIT' ? 'ACERTOU' : 'AFUNDOU'}`);
+          addLog(
+            `💥 ATAQUE RECEBIDO — ${String.fromCharCode(65 + row)}${col + 1} — ${status === "HIT" ? "ACERTOU" : "AFUNDOU"}`,
+          );
         }
-        if (status === 'SUNK') addLog('🔥 EMBARCAÇÃO DESTRUÍDA');
+        if (status === "SUNK") addLog("🔥 EMBARCAÇÃO DESTRUÍDA");
         break;
-      case 'MISS':
+      case "MISS":
         if (isMyAttack) {
-          setEnemyGrid((prev) => { const c = prev.map(r => [...r]); c[row][col] = 2; return c; });
+          setEnemyGrid((prev) => {
+            const c = prev.map((r) => [...r]);
+            c[row][col] = 2;
+            return c;
+          });
           addLog(`💨 ${String.fromCharCode(65 + row)}${col + 1} — ERROU`);
         } else {
-          setMyGrid((prev) => { const c = prev.map(r => [...r]); c[row][col] = 2; return c; });
-          addLog(`🌊 INIMIGO ERROU — ${String.fromCharCode(65 + row)}${col + 1}`);
+          setMyGrid((prev) => {
+            const c = prev.map((r) => [...r]);
+            c[row][col] = 2;
+            return c;
+          });
+          addLog(
+            `🌊 INIMIGO ERROU — ${String.fromCharCode(65 + row)}${col + 1}`,
+          );
         }
         break;
-      case 'GAME_OVER':
-        setPhase('FINISHED');
+      case "GAME_OVER":
+        setPhase("FINISHED");
         setWinner(attackerId);
-        addLog(`🏁 ${attackerId === user.id ? 'VITÓRIA' : 'DERROTA'}`);
+        addLog(`🏁 ${attackerId === user.id ? "VITÓRIA" : "DERROTA"}`);
         break;
-      case 'ATTACKED':
-        setError('Posição já atacada');
+      case "ATTACKED":
+        setError("Posição já atacada");
         break;
-      case 'NOT_YOUR_TURN':
-        setError('Não é sua vez, Comandante');
+      case "NOT_YOUR_TURN":
+        setError("Não é sua vez, Comandante");
         break;
-      case 'INVALID_POSITION':
-        setError('Coordenadas de alvo inválidas');
+      case "INVALID_POSITION":
+        setError("Coordenadas de alvo inválidas");
         break;
       default:
         break;
@@ -252,32 +290,34 @@ export default function Game() {
 
   function setPlacedShipsSync(updater) {
     setPlacedShips((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
+      const next = typeof updater === "function" ? updater(prev) : updater;
       placedShipsRef.current = next;
       return next;
     });
   }
 
   function handlePlaceResult(result) {
-    let status = typeof result === 'string' ? result : JSON.stringify(result);
-    status = status.replace(/^"|"$/g, '');
-    if (status === 'OK') {
+    let status = typeof result === "string" ? result : JSON.stringify(result);
+    status = status.replace(/^"|"$/g, "");
+    if (status === "OK") {
       const ship = selectedShipRef.current;
       if (ship) {
         setPlacedShipsSync((prev) => [...prev, ship.id]);
         setSelectedShipSync(null);
       }
-      setError('');
+      setError("");
       api.getBoard(gameId, user.id).then(setMyGrid).catch(console.error);
       addLog(`Embarcação posicionada (${placedShipsRef.current.length}/5)`);
-    } else if (status === 'INVALID') {
-      setError('Posicionamento inválido — sobrepõe outra embarcação ou ultrapassa o limite');
-    } else if (status === 'BOARD_CLEARED') {
+    } else if (status === "INVALID") {
+      setError(
+        "Posicionamento inválido — sobrepõe outra embarcação ou ultrapassa o limite",
+      );
+    } else if (status === "BOARD_CLEARED") {
       setPlacedShipsSync([]);
       setMyGrid(createEmptyGrid());
       setSelectedShipSync(null);
-      setError('');
-      addLog('Tabuleiro limpo — todas as embarcações recolhidas');
+      setError("");
+      addLog("Tabuleiro limpo — todas as embarcações recolhidas");
     }
   }
 
@@ -287,7 +327,7 @@ export default function Game() {
 
   function handlePlaceShip(row, col) {
     const ship = selectedShipRef.current;
-    if (!ship || phase !== 'SETUP' || myReady) return;
+    if (!ship || phase !== "SETUP" || myReady) return;
     if (horizontal && col + ship.size > 10) {
       setError(`Embarcação não cabe — ultrapassa o limite do tabuleiro`);
       return;
@@ -296,7 +336,7 @@ export default function Game() {
       setError(`Embarcação não cabe — ultrapassa o limite do tabuleiro`);
       return;
     }
-    setError('');
+    setError("");
     ws.publish(`/app/game/${gameId}/place`, {
       row,
       col,
@@ -311,7 +351,7 @@ export default function Game() {
 
   function handleReady() {
     if (placedShipsRef.current.length < 5) {
-      setError('Posicione todas as 5 embarcações antes de sinalizar prontidão');
+      setError("Posicione todas as 5 embarcações antes de sinalizar prontidão");
       return;
     }
     ws.publish(`/app/game/${gameId}/ready`, {});
@@ -319,12 +359,13 @@ export default function Game() {
   }
 
   function handleAttack(row, col) {
-    if (phase !== 'PLAYING' || currentTurn !== user.id) return;
+    if (phase !== "PLAYING" || currentTurn !== user.id) return;
     ws.publish(`/app/game/${gameId}/attack`, { row, col });
   }
 
   function handleSurrender() {
-    if (!confirm('ABANDONAR A MISSÃO? Esta ação não pode ser desfeita.')) return;
+    if (!confirm("ABANDONAR A MISSÃO? Esta ação não pode ser desfeita."))
+      return;
     ws.publish(`/app/game/${gameId}/surrender`, {});
   }
 
@@ -335,31 +376,46 @@ export default function Game() {
     <div className="min-h-screen bg-background flex flex-col overflow-hidden">
       <PageHeader shrink>
         <div className="flex flex-col items-end">
-          <span className="text-[10px] text-on-surface-variant uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span
+            className="text-[10px] text-on-surface-variant uppercase"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             Conexão
           </span>
           <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 ${connected ? 'bg-primary animate-pulse' : 'bg-error'}`}></div>
-            <span className={`text-[10px] uppercase ${connected ? 'text-primary' : 'text-error'}`} style={{ fontFamily: 'var(--font-mono)' }}>
-              {connected ? 'Linha Segura Ativa' : 'Desconectado'}
+            <div
+              className={`w-2 h-2 ${connected ? "bg-primary animate-pulse" : "bg-error"}`}
+            ></div>
+            <span
+              className={`text-[10px] uppercase ${connected ? "text-primary" : "text-error"}`}
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              {connected ? "Linha Segura Ativa" : "Desconectado"}
             </span>
           </div>
         </div>
-        {phase !== 'FINISHED' && (
+        {phase !== "FINISHED" && (
           <>
             <HeaderDivider />
-            <button onClick={handleSurrender} className="btn-danger text-xs px-3 py-1.5">
-              Render
+            <button
+              onClick={handleSurrender}
+              className="btn-danger text-xs px-3 py-1.5"
+            >
+              Se Render
             </button>
           </>
         )}
       </PageHeader>
 
-      <AlertBanner type="game-error" message={error} onClose={() => setError('')} />
+      <AlertBanner
+        type="game-error"
+        message={error}
+        onClose={() => setError("")}
+      />
 
       {/* Main */}
       <main className="flex-1 overflow-auto p-4">
-        {phase === 'SETUP' && (
+        {phase === "SETUP" && (
           <SetupPhase
             myGrid={myGrid}
             ships={SHIPS}
@@ -377,7 +433,7 @@ export default function Game() {
             opponentReady={opponentReady}
           />
         )}
-        {phase === 'PLAYING' && (
+        {phase === "PLAYING" && (
           <PlayingPhase
             myGrid={myGrid}
             enemyGrid={enemyGrid}
@@ -390,24 +446,36 @@ export default function Game() {
             sunkEnemyCells={sunkEnemyCells}
           />
         )}
-        {phase === 'FINISHED' && (
+        {phase === "FINISHED" && (
           <FinishedPhase
             isVictory={isVictory}
-            onReturn={() => { ws.disconnect(); navigate('/', { replace: true }); }}
+            onReturn={() => {
+              ws.disconnect();
+              navigate("/", { replace: true });
+            }}
           />
         )}
       </main>
 
       {/* Footer */}
       <footer className="flex justify-between items-center px-4 py-1 w-full bg-surface-container-lowest border-t-2 border-outline shrink-0 h-8">
-        <span className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+        <span
+          className="text-[10px] text-outline uppercase"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
           © 1942 INTEL NAVAL. // CRIPTOGRAFIA: AES-256-MIL
         </span>
         <div className="flex gap-4 items-center">
-          <span className="text-[10px] text-secondary uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span
+            className="text-[10px] text-secondary uppercase"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             VER: 1.4.2-ALPHA
           </span>
-          <span className="text-[10px] text-primary flex items-center gap-1" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span
+            className="text-[10px] text-primary flex items-center gap-1"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             <span className="material-symbols-outlined text-[12px]">lock</span>
             LINHA SEGURA
           </span>
@@ -419,9 +487,20 @@ export default function Game() {
 
 // ===================== SETUP PHASE =====================
 function SetupPhase({
-  myGrid, ships, selectedShip, setSelectedShip, placedShips,
-  horizontal, setHorizontal, hoveredCell, setHoveredCell,
-  onPlaceShip, onClear, onReady, myReady, opponentReady,
+  myGrid,
+  ships,
+  selectedShip,
+  setSelectedShip,
+  placedShips,
+  horizontal,
+  setHorizontal,
+  hoveredCell,
+  setHoveredCell,
+  onPlaceShip,
+  onClear,
+  onReady,
+  myReady,
+  opponentReady,
 }) {
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
@@ -431,19 +510,22 @@ function SetupPhase({
           <div>
             <h1
               className="text-lg stencil-text text-primary"
-              style={{ fontFamily: 'var(--font-headline)' }}
+              style={{ fontFamily: "var(--font-headline)" }}
             >
-            Gráfico Tático: Setor 7-B
+              Gráfico Tático: Setor 7-B
             </h1>
             <div className="flex gap-4 mt-1">
               <span
                 className="text-[10px] text-secondary bg-secondary-container/30 px-2 py-0.5 border border-secondary/50"
-                style={{ fontFamily: 'var(--font-mono)' }}
+                style={{ fontFamily: "var(--font-mono)" }}
               >
-              COORDINATES: NAV-SYNC
+                COORDINATES: NAV-SYNC
               </span>
-              <span className="text-[10px] text-outline" style={{ fontFamily: 'var(--font-mono)' }}>
-                STATUS: {myReady ? 'PRONTO' : 'PLANEJANDO'}
+              <span
+                className="text-[10px] text-outline"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                STATUS: {myReady ? "PRONTO" : "PLANEJANDO"}
               </span>
             </div>
           </div>
@@ -455,10 +537,19 @@ function SetupPhase({
             <Board
               grid={myGrid}
               onCellClick={onPlaceShip}
-              onCellHover={!myReady ? (r, c) => setHoveredCell(r != null ? { row: r, col: c } : null) : undefined}
+              onCellHover={
+                !myReady
+                  ? (r, c) =>
+                      setHoveredCell(r != null ? { row: r, col: c } : null)
+                  : undefined
+              }
               isOpponent={false}
               disabled={myReady}
-              ghostShip={selectedShip && !myReady ? { size: selectedShip.size, horizontal } : null}
+              ghostShip={
+                selectedShip && !myReady
+                  ? { size: selectedShip.size, horizontal }
+                  : null
+              }
               hoveredCell={hoveredCell}
             />
           </div>
@@ -468,34 +559,54 @@ function SetupPhase({
         <div className="mt-4 p-4 border-2 border-outline-variant bg-surface-container flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex gap-6">
             <div className="flex flex-col">
-              <span className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>Comandos</span>
+              <span
+                className="text-[10px] text-outline uppercase"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Comandos
+              </span>
               <div className="flex gap-3 mt-1">
                 <button
                   onClick={() => setHorizontal(!horizontal)}
                   disabled={myReady}
                   className="text-on-surface text-xs flex items-center gap-1 disabled:opacity-40"
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                  style={{ fontFamily: "var(--font-mono)" }}
                 >
-                  <kbd className="bg-surface-variant px-1.5 py-0.5 border border-outline text-[10px]">R</kbd>
-                  {horizontal ? 'HORIZONTAL' : 'VERTICAL'}
+                  <kbd className="bg-surface-variant px-1.5 py-0.5 border border-outline text-[10px]">
+                    R
+                  </kbd>
+                  {horizontal ? "HORIZONTAL" : "VERTICAL"}
                 </button>
                 <button
                   onClick={onClear}
                   disabled={myReady}
                   className="text-on-surface text-xs flex items-center gap-1 disabled:opacity-40"
-                  style={{ fontFamily: 'var(--font-mono)' }}
+                  style={{ fontFamily: "var(--font-mono)" }}
                 >
-                  <kbd className="bg-surface-variant px-1.5 py-0.5 border border-outline text-[10px]">C</kbd>
+                  <kbd className="bg-surface-variant px-1.5 py-0.5 border border-outline text-[10px]">
+                    C
+                  </kbd>
                   LIMPAR
                 </button>
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>Status</span>
+              <span
+                className="text-[10px] text-outline uppercase"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
+                Status
+              </span>
               <div className="flex gap-2 items-center mt-1">
-                <div className={`w-2 h-2 ${opponentReady ? 'bg-primary' : 'bg-secondary animate-pulse'}`} style={{ opacity: 0.6 }}></div>
-                <span className="text-secondary text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
-                  {opponentReady ? 'INIMIGO PRONTO' : 'AGUARDANDO INIMIGO...'}
+                <div
+                  className={`w-2 h-2 ${opponentReady ? "bg-primary" : "bg-secondary animate-pulse"}`}
+                  style={{ opacity: 0.6 }}
+                ></div>
+                <span
+                  className="text-secondary text-xs"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  {opponentReady ? "INIMIGO PRONTO" : "AGUARDANDO INIMIGO..."}
                 </span>
               </div>
             </div>
@@ -506,7 +617,9 @@ function SetupPhase({
             disabled={myReady || placedShips.length < 5}
             className="btn-primary px-8 py-3 text-base disabled:opacity-40"
           >
-            {myReady ? 'EM ESPERA' : `POSICIONAR FROTA (${placedShips.length}/5)`}
+            {myReady
+              ? "EM ESPERA"
+              : `POSICIONAR FROTA (${placedShips.length}/5)`}
           </button>
         </div>
       </section>
@@ -516,11 +629,14 @@ function SetupPhase({
         <div className="p-3 lg:p-4 border-b-2 border-outline bg-surface-container-high">
           <h3
             className="stencil-text text-on-surface text-sm"
-            style={{ fontFamily: 'var(--font-headline)' }}
+            style={{ fontFamily: "var(--font-headline)" }}
           >
             Manifesto de Embarcações
           </h3>
-          <p className="text-[10px] text-secondary uppercase mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+          <p
+            className="text-[10px] text-secondary uppercase mt-0.5"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             AGUARDANDO POSICIONAMENTO
           </p>
         </div>
@@ -531,14 +647,18 @@ function SetupPhase({
             return (
               <button
                 key={ship.id}
-                onClick={() => !isPlaced && !myReady && setSelectedShip(isSelected ? null : ship)}
+                onClick={() =>
+                  !isPlaced &&
+                  !myReady &&
+                  setSelectedShip(isSelected ? null : ship)
+                }
                 disabled={isPlaced || myReady}
                 className={`shrink-0 lg:w-full w-32 p-2 lg:p-3 border-2 text-left transition-all relative ${
                   isSelected
-                    ? 'border-secondary bg-secondary/10'
+                    ? "border-secondary bg-secondary/10"
                     : isPlaced
-                      ? 'border-outline/30 opacity-50'
-                      : 'border-outline hover:bg-surface-variant'
+                      ? "border-outline/30 opacity-50"
+                      : "border-outline hover:bg-surface-variant"
                 }`}
               >
                 {isPlaced && (
@@ -550,15 +670,24 @@ function SetupPhase({
                 )}
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-on-surface uppercase tracking-wider font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
+                    <p
+                      className="text-xs text-on-surface uppercase tracking-wider font-bold"
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
                       {ship.name}
                     </p>
-                    <p className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+                    <p
+                      className="text-[10px] text-outline uppercase"
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
                       Tamanho: {ship.size} Unidades
                     </p>
                   </div>
-                  <span className="text-xs text-outline" style={{ fontFamily: 'var(--font-mono)' }}>
-                    {isPlaced ? '0' : '1'}/1
+                  <span
+                    className="text-xs text-outline"
+                    style={{ fontFamily: "var(--font-mono)" }}
+                  >
+                    {isPlaced ? "0" : "1"}/1
                   </span>
                 </div>
               </button>
@@ -567,9 +696,18 @@ function SetupPhase({
         </div>
         <div className="p-3 border-t-2 border-outline bg-surface-container-low">
           <div className="p-2 border-2 border-dashed border-outline-variant text-center">
-            <p className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>Nota Tática</p>
-            <p className="text-[11px] text-on-surface mt-1 italic" style={{ fontFamily: 'var(--font-body)' }}>
-              "Selecione uma embarcação e clique no tabuleiro para posicioná-la."
+            <p
+              className="text-[10px] text-outline uppercase"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              Nota Tática
+            </p>
+            <p
+              className="text-[11px] text-on-surface mt-1 italic"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              "Selecione uma embarcação e clique no tabuleiro para
+              posicioná-la."
             </p>
           </div>
         </div>
@@ -579,7 +717,17 @@ function SetupPhase({
 }
 
 // ===================== PLAYING PHASE =====================
-function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hoveredCell, setHoveredCell, sunkMyCells, sunkEnemyCells }) {
+function PlayingPhase({
+  myGrid,
+  enemyGrid,
+  isMyTurn,
+  onAttack,
+  battleLog,
+  hoveredCell,
+  setHoveredCell,
+  sunkMyCells,
+  sunkEnemyCells,
+}) {
   const logEndRef = useRef(null);
 
   return (
@@ -587,28 +735,39 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
       {/* Battle Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b-2 border-outline pb-4 gap-2">
         <div className="flex flex-col">
-          <span className="text-[10px] text-outline uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span
+            className="text-[10px] text-outline uppercase"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             Status de Combate
           </span>
           <div className="flex items-center gap-3 mt-1">
             <span
-              className={`text-2xl stencil-text ${isMyTurn ? 'text-primary' : 'text-on-surface-variant'}`}
-              style={{ fontFamily: 'var(--font-headline)' }}
+              className={`text-2xl stencil-text ${isMyTurn ? "text-primary" : "text-on-surface-variant"}`}
+              style={{ fontFamily: "var(--font-headline)" }}
             >
-              {isMyTurn ? 'SUA VEZ' : 'VEZ DO INIMIGO'}
+              {isMyTurn ? "SUA VEZ" : "VEZ DO INIMIGO"}
             </span>
-            {isMyTurn && <div className="w-4 h-4 bg-primary animate-ping rounded-full"></div>}
+            {isMyTurn && (
+              <div className="w-4 h-4 bg-primary animate-ping rounded-full"></div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-6">
           <div className="text-right">
-            <span className="text-[10px] text-outline uppercase block" style={{ fontFamily: 'var(--font-mono)' }}>
+            <span
+              className="text-[10px] text-outline uppercase block"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
               Coordenadas do Alvo
             </span>
-            <div className="text-lg text-secondary mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
+            <div
+              className="text-lg text-secondary mt-0.5"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
               {hoveredCell
                 ? `${String.fromCharCode(65 + hoveredCell.row)} / ${hoveredCell.col + 1}`
-                : '-- / --'}
+                : "-- / --"}
             </div>
           </div>
         </div>
@@ -633,7 +792,10 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/60 backdrop-blur-[1px] pointer-events-none">
               <div className="flex items-center gap-2 bg-surface-container-high border border-outline-variant px-4 py-2">
                 <div className="w-2 h-2 bg-secondary rounded-full animate-pulse"></div>
-                <span className="text-xs text-on-surface-variant uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>
+                <span
+                  className="text-xs text-on-surface-variant uppercase tracking-widest"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
                   Aguardando oponente...
                 </span>
               </div>
@@ -641,8 +803,12 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
           )}
           <Board
             grid={enemyGrid}
-            onCellClick={(row, col) => { if (isMyTurn) onAttack(row, col); }}
-            onCellHover={(row, col) => setHoveredCell(row != null ? { row, col } : null)}
+            onCellClick={(row, col) => {
+              if (isMyTurn) onAttack(row, col);
+            }}
+            onCellHover={(row, col) =>
+              setHoveredCell(row != null ? { row, col } : null)
+            }
             isOpponent={true}
             disabled={!isMyTurn}
             title="ÁGUAS INIMIGAS"
@@ -654,23 +820,41 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
       {/* Battle Log */}
       <div className="bg-surface-container-low border-2 border-outline p-4 h-40 flex flex-col">
         <div className="flex justify-between items-center mb-3 border-b border-outline/20 pb-2">
-          <span className="text-xs text-primary uppercase font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span
+            className="text-xs text-primary uppercase font-bold"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             LOG DE BATALHA // AO VIVO
           </span>
-          <span className="text-[10px] text-outline" style={{ fontFamily: 'var(--font-mono)' }}>
+          <span
+            className="text-[10px] text-outline"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             ENCRYPTION: AES-256-MIL
           </span>
         </div>
-        <div className="flex-1 overflow-y-auto space-y-1" style={{ fontFamily: 'var(--font-mono)' }}>
+        <div
+          className="flex-1 overflow-y-auto space-y-1"
+          style={{ fontFamily: "var(--font-mono)" }}
+        >
           {battleLog.length === 0 ? (
-            <p className="text-on-surface-variant text-xs">Aguardando dados de combate...</p>
+            <p className="text-on-surface-variant text-xs">
+              Aguardando dados de combate...
+            </p>
           ) : (
             battleLog.map((entry, i) => (
-              <p key={i} className={`text-xs ${
-                entry.message.includes('🎯') || entry.message.includes('🔥') ? 'text-secondary' :
-                entry.message.includes('💥') ? 'text-error' :
-                entry.message.includes('🏁') ? 'text-primary' : 'text-on-surface-variant'
-              }`}>
+              <p
+                key={i}
+                className={`text-xs ${
+                  entry.message.includes("🎯") || entry.message.includes("🔥")
+                    ? "text-secondary"
+                    : entry.message.includes("💥")
+                      ? "text-error"
+                      : entry.message.includes("🏁")
+                        ? "text-primary"
+                        : "text-on-surface-variant"
+                }`}
+              >
                 [{entry.time.toLocaleTimeString()}] {entry.message}
               </p>
             ))
@@ -682,8 +866,6 @@ function PlayingPhase({ myGrid, enemyGrid, isMyTurn, onAttack, battleLog, hovere
   );
 }
 
-
-
 // ===================== FINISHED PHASE =====================
 function FinishedPhase({ isVictory, onReturn }) {
   return (
@@ -691,28 +873,30 @@ function FinishedPhase({ isVictory, onReturn }) {
       <div className="text-center space-y-8 max-w-md">
         <div
           className={`inline-flex items-center justify-center w-24 h-24 border-4 ${
-            isVictory ? 'border-secondary text-secondary' : 'border-error text-error'
+            isVictory
+              ? "border-secondary text-secondary"
+              : "border-error text-error"
           }`}
         >
           <span className="material-symbols-outlined text-5xl">
-            {isVictory ? 'military_tech' : 'dangerous'}
+            {isVictory ? "military_tech" : "dangerous"}
           </span>
         </div>
 
         <div>
           <h1
-            className={`text-4xl stencil-text ${isVictory ? 'text-secondary' : 'text-error'}`}
-            style={{ fontFamily: 'var(--font-headline)' }}
+            className={`text-4xl stencil-text ${isVictory ? "text-secondary" : "text-error"}`}
+            style={{ fontFamily: "var(--font-headline)" }}
           >
-            {isVictory ? 'OPERAÇÃO BEM-SUCEDIDA' : 'OPERAÇÃO FRACASSADA'}
+            {isVictory ? "OPERAÇÃO BEM-SUCEDIDA" : "OPERAÇÃO FRACASSADA"}
           </h1>
           <p
             className="text-on-surface-variant mt-2 uppercase tracking-widest text-sm"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            style={{ fontFamily: "var(--font-mono)" }}
           >
             {isVictory
-              ? 'Todas as embarcações inimigas neutralizadas. Parabéns, Comandante.'
-              : 'Sua frota foi destruída. Melhor sorte na próxima vez.'}
+              ? "Todas as embarcações inimigas neutralizadas. Parabéns, Comandante."
+              : "Sua frota foi destruída. Melhor sorte na próxima vez."}
           </p>
         </div>
 
