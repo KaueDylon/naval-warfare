@@ -60,6 +60,10 @@ export function login(email, password) {
   });
 }
 
+export function logout() {
+  return request('/auth/logout', { method: 'POST' });
+}
+
 // Player
 export function getMe() {
   return request('/player/me');

@@ -41,10 +41,16 @@ export function AuthProvider({ children }) {
     return userData;
   }
 
-  function logout() {
-    api.clearToken();
-    setToken(null);
-    setUser(null);
+  async function logout() {
+    try {
+      await api.logout();
+    } catch {
+      // ignora erro — limpa o estado local de qualquer forma
+    } finally {
+      api.clearToken();
+      setToken(null);
+      setUser(null);
+    }
   }
 
   function refreshUser() {
