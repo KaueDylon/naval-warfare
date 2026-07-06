@@ -8,11 +8,15 @@ let reconnectSubscriptions = []; // Callbacks para re-subscribe após reconexão
 export function connect(token, onConnect, onError) {
   currentToken = token;
 
-  // Se já está conectado com o mesmo token, reutiliza
+  // Se já está conectado com o mesmo token, chama onConnect imediatamente
+  // para que as subscriptions do contexto atual sejam registradas
   if (stompClient && stompClient.connected) {
     if (onConnect) onConnect();
     return stompClient;
   }
+
+  // Limpa subscriptions de sessões anteriores antes de criar nova conexão
+  reconnectSubscriptions = [];
 
   // Se existe mas não está conectado, desativa antes de criar novo
   if (stompClient) {
