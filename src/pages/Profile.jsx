@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';
+import PageHeader, { HeaderDivider, HeaderIconButton, BackToHQButton } from '../components/PageHeader';
+import AlertBanner from '../components/AlertBanner';
+import BottomNav from '../components/BottomNav';
+import SectionCard from '../components/SectionCard';
 
 const NATIONS = ['USA', 'UK', 'USSR', 'GERMANY', 'JAPAN', 'ITALY'];
 
@@ -47,7 +51,7 @@ export default function Profile() {
       setSelectedNation(data.nation || '');
       setSelectedPortrait(data.portrait || '');
     } catch (err) {
-      setError('Failed to load dossier');
+      setError('Falha ao carregar dossiê');
     }
   }
 
@@ -64,11 +68,11 @@ export default function Profile() {
         await api.updateMe(updates);
         await refreshUser();
         setPassword('');
-        setMessage('DOSSIER UPDATED');
+        setMessage('DOSSIÊ ATUALIZADO');
         loadProfile();
       }
     } catch (err) {
-      setError(err.message || 'Update failed');
+      setError(err.message || 'Falha na atualização');
     } finally {
       setLoading(false);
     }
@@ -81,9 +85,9 @@ export default function Profile() {
       await api.setNation(nation);
       setSelectedNation(nation);
       await refreshUser();
-      setMessage(`NATION SET: ${nation}`);
+      setMessage(`NAÇÃO DEFINIDA: ${nation}`);
     } catch (err) {
-      setError(err.message || 'Failed to set nation');
+      setError(err.message || 'Falha ao definir nação');
     }
   }
 
@@ -94,19 +98,19 @@ export default function Profile() {
       await api.setPortrait(portrait);
       setSelectedPortrait(portrait);
       await refreshUser();
-      setMessage('PORTRAIT UPDATED');
+      setMessage('RETRATO ATUALIZADO');
     } catch (err) {
-      setError(err.message || 'Failed to set portrait');
+      setError(err.message || 'Falha ao definir retrato');
     }
   }
 
   async function handleDelete() {
-    if (!confirm('CONFIRM: This action is irreversible. Delete your command record?')) return;
+    if (!confirm('CONFIRMAR: Esta ação é irreversível. Excluir seu registro de comando?')) return;
     try {
       await api.deleteMe();
       logout();
     } catch (err) {
-      setError(err.message || 'Deletion failed');
+      setError(err.message || 'Falha na exclusão');
     }
   }
 
@@ -116,68 +120,18 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b-2 border-outline-variant px-6 h-16 flex items-center bg-surface-container-lowest">
-        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
-          <h1
-            className="text-xl md:text-2xl stencil-text text-primary"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            PACIFIC.COMMAND
-          </h1>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/ranking')}
-              className="p-2 text-secondary hover:text-primary hover:bg-surface-container transition-colors"
-              title="Rankings"
-            >
-              <span className="material-symbols-outlined">military_tech</span>
-            </button>
-            <button
-              onClick={() => navigate('/history')}
-              className="p-2 text-secondary hover:text-primary hover:bg-surface-container transition-colors"
-              title="Match History"
-            >
-              <span className="material-symbols-outlined">history</span>
-            </button>
-            <div className="h-8 w-px bg-outline-variant mx-1"></div>
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors px-3 py-2"
-            >
-              <span className="material-symbols-outlined text-sm">arrow_back</span>
-              <span className="text-xs uppercase tracking-wider" style={{ fontFamily: 'var(--font-mono)' }}>
-                Return to HQ
-              </span>
-            </button>
-            <div className="h-8 w-px bg-outline-variant mx-1"></div>
-            <button
-              onClick={logout}
-              className="p-2 text-secondary hover:text-error hover:bg-surface-container transition-colors"
-              title="Logout"
-            >
-              <span className="material-symbols-outlined">logout</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <PageHeader>
+        <HeaderIconButton icon="military_tech" title="Ranking" onClick={() => navigate('/ranking')} />
+        <HeaderIconButton icon="history" title="Histórico" onClick={() => navigate('/history')} />
+        <HeaderDivider />
+        <BackToHQButton />
+        <HeaderDivider />
+        <HeaderIconButton icon="logout" title="Sair" onClick={logout} danger />
+      </PageHeader>
 
       <main className="max-w-6xl mx-auto p-6 space-y-8">
-        {/* Messages */}
-        {message && (
-          <div className="border-2 border-primary bg-primary/10 p-3">
-            <p className="text-primary text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-              ✓ {message}
-            </p>
-          </div>
-        )}
-        {error && (
-          <div className="border-2 border-error bg-error/10 p-3">
-            <p className="text-error text-sm" style={{ fontFamily: 'var(--font-mono)' }}>
-              ✗ {error}
-            </p>
-          </div>
-        )}
+        <AlertBanner type="success" message={message} />
+        <AlertBanner type="error" message={error} />
 
         {/* Main Two-Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-6">
@@ -203,7 +157,7 @@ export default function Profile() {
                 className="text-[0.6rem] text-on-surface-variant uppercase tracking-widest mt-2 text-center"
                 style={{ fontFamily: 'var(--font-mono)' }}
               >
-                {selectedPortrait ? selectedPortrait.replace(/_/g, ' ') : 'NO PORTRAIT ASSIGNED'}
+                {selectedPortrait ? selectedPortrait.replace(/_/g, ' ') : 'SEM RETRATO ATRIBUÍDO'}
               </p>
             </div>
 
@@ -340,13 +294,7 @@ export default function Profile() {
         </div>
 
         {/* Nation Selection */}
-        <section className="dispatch-border p-6">
-          <h2
-            className="stencil-text text-sm text-primary border-b border-outline-variant pb-2 mb-4"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            NAÇÃO — ALIANÇA {profile?.nation && <span className="text-xs text-on-surface-variant ml-2">(IRREVERSÍVEL)</span>}
-          </h2>
+        <SectionCard title={<>NAÇÃO — ALIANÇA {profile?.nation && <span className="text-xs text-on-surface-variant ml-2">(IRREVERSÍVEL)</span>}</>}>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             {NATIONS.map((nation) => (
               <button
@@ -374,17 +322,11 @@ export default function Profile() {
               </button>
             ))}
           </div>
-        </section>
+        </SectionCard>
 
         {/* Portrait Selection */}
         {selectedNation && (
-          <section className="dispatch-border p-6">
-            <h2
-              className="stencil-text text-sm text-primary border-b border-outline-variant pb-2 mb-4"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              RETRATO OFICIAL
-            </h2>
+          <SectionCard title="RETRATO OFICIAL">
             <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
               {availablePortraits.map((portrait) => (
                 <button
@@ -415,17 +357,11 @@ export default function Profile() {
                 </button>
               ))}
             </div>
-          </section>
+          </SectionCard>
         )}
 
         {/* Edit Form */}
-        <section className="dispatch-border p-6">
-          <h2
-            className="stencil-text text-sm text-primary border-b border-outline-variant pb-2 mb-4"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            MODIFICAR CREDENCIAIS
-          </h2>
+        <SectionCard title="MODIFICAR CREDENCIAIS">
           <form onSubmit={handleUpdateInfo} className="space-y-4 max-w-md">
             <div>
               <label
@@ -462,16 +398,13 @@ export default function Profile() {
               {loading ? 'PROCESSANDO...' : 'ATUALIZAR DOSSIÊ'}
             </button>
           </form>
-        </section>
+        </SectionCard>
 
         {/* Danger Zone */}
-        <section className="border-2 border-error p-6">
-          <h2
-            className="stencil-text text-sm text-error border-b border-error/30 pb-2 mb-4"
-            style={{ fontFamily: 'var(--font-headline)' }}
-          >
-            ZONA DE PERIGO — IRREVERSÍVEL
-          </h2>
+        <SectionCard
+          title="ZONA DE PERIGO — IRREVERSÍVEL"
+          variant="danger"
+        >
           <p
             className="text-on-surface-variant text-sm mb-4"
             style={{ fontFamily: 'var(--font-mono)' }}
@@ -481,41 +414,15 @@ export default function Profile() {
           <button onClick={handleDelete} className="btn-danger text-sm">
             EXCLUIR REGISTRO DE COMANDO
           </button>
-        </section>
+        </SectionCard>
       </main>
 
-      {/* Bottom Mobile Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 md:hidden border-t-2 border-outline-variant bg-surface-container-low px-2 py-2">
-        <div className="flex items-center justify-around">
-          <button
-            onClick={() => navigate('/')}
-            className="flex flex-col items-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors p-2"
-          >
-            <span className="material-symbols-outlined text-xl">home</span>
-            <span className="text-[0.55rem] uppercase" style={{ fontFamily: 'var(--font-mono)' }}>HQ</span>
-          </button>
-          <button
-            onClick={() => navigate('/ranking')}
-            className="flex flex-col items-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors p-2"
-          >
-            <span className="material-symbols-outlined text-xl">military_tech</span>
-            <span className="text-[0.55rem] uppercase" style={{ fontFamily: 'var(--font-mono)' }}>Rank</span>
-          </button>
-          <button
-            onClick={() => navigate('/history')}
-            className="flex flex-col items-center gap-0.5 text-on-surface-variant hover:text-primary transition-colors p-2"
-          >
-            <span className="material-symbols-outlined text-xl">history</span>
-            <span className="text-[0.55rem] uppercase" style={{ fontFamily: 'var(--font-mono)' }}>Hist</span>
-          </button>
-          <button
-            className="flex flex-col items-center gap-0.5 text-primary p-2"
-          >
-            <span className="material-symbols-outlined text-xl">person</span>
-            <span className="text-[0.55rem] uppercase" style={{ fontFamily: 'var(--font-mono)' }}>Perfil</span>
-          </button>
-        </div>
-      </nav>
+      <BottomNav items={[
+        { icon: 'home', label: 'HQ', path: '/' },
+        { icon: 'military_tech', label: 'Rank', path: '/ranking' },
+        { icon: 'history', label: 'Hist', path: '/history' },
+        { icon: 'person', label: 'Perfil', path: '/profile' },
+      ]} />
     </div>
   );
 }
