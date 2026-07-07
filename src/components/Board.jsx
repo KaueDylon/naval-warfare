@@ -9,6 +9,7 @@ export default function Board({
   ghostShip = null,
   hoveredCell = null,
   sunkCells = new Set(), // Set de "row-col" — células de navios afundados
+  animatedCell = null, // {row, col, type} — célula com animação ativa
 }) {
   const rows = 'ABCDEFGHIJ'.split('');
   const cols = Array.from({ length: 10 }, (_, i) => i + 1);
@@ -165,13 +166,15 @@ export default function Board({
                 const canAttack  = isOpponent && !disabled && !isAttacked;
                 const canPlace   = !isOpponent && !disabled && !!ghostShip;
                 const interactive = canAttack || canPlace;
+                const isAnimating = animatedCell && animatedCell.row === rowIdx && animatedCell.col === colIdx;
+                const animClass = isAnimating ? `animate-${animatedCell.type}` : '';
 
                 return (
                   <div
                     key={`${row}${col}`}
                     className={`border flex items-center justify-center relative ${
                       isOpponent ? 'border-secondary/20' : 'border-outline/10'
-                    } ${interactive ? 'cursor-crosshair' : ''}`}
+                    } ${interactive ? 'cursor-crosshair' : ''} ${animClass}`}
                     style={getCellStyle(value, rowIdx, colIdx)}
                     onClick={() => {
                       if (interactive && onCellClick) onCellClick(rowIdx, colIdx);
