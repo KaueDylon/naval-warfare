@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import * as api from "../services/api";
 import * as ws from "../services/websocket";
+import * as sfx from "../services/sounds";
 import Board from "../components/Board";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import AlertBanner from "../components/AlertBanner";
@@ -45,6 +46,11 @@ export default function Game() {
   const [hoveredCell, setHoveredCell] = useState(null);
   const [error, setError] = useState("");
   const [connected, setConnected] = useState(false);
+  const [turnTimer, setTurnTimer] = useState(15);
+  const turnTimerRef = useRef(null);
+  const [turnEpoch, setTurnEpoch] = useState(0); // incrementa a cada novo turno do jogador para forçar reset do timer
+  const enemyGridRef = useRef(createEmptyGrid());
+  const [animatedCell, setAnimatedCell] = useState(null); // {row, col, type, board}
 
   function createEmptyGrid() {
     return Array.from({ length: 10 }, () => Array(10).fill(0));
@@ -141,6 +147,58 @@ export default function Game() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [phase, myReady]);
 
+  // Sync enemyGridRef com state
+  useEffect(() => {
+    enemyGridRef.current = enemyGrid;
+  }, [enemyGrid]);
+
+  // Timer de turno — 15s para jogar, senão tiro aleatório
+  useEffect(() => {
+    if (turnTimerRef.current) {
+      clearInterval(turnTimerRef.current);
+      turnTimerRef.current = null;
+    }
+
+    if (phase !== "PLAYING" || currentTurn !== user.id) {
+      setTurnTimer(15);
+      return;
+    }
+
+    setTurnTimer(15);
+    turnTimerRef.current = setInterval(() => {
+      setTurnTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(turnTimerRef.current);
+          turnTimerRef.current = null;
+          fireRandomShot();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (turnTimerRef.current) {
+        clearInterval(turnTimerRef.current);
+        turnTimerRef.current = null;
+      }
+    };
+  }, [phase, currentTurn, user.id, turnEpoch]);
+
+  function fireRandomShot() {
+    const grid = enemyGridRef.current;
+    const available = [];
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 10; c++) {
+        if (grid[r][c] === 0) available.push({ row: r, col: c });
+      }
+    }
+    if (available.length === 0) return;
+    const target = available[Math.floor(Math.random() * available.length)];
+    ws.publish(`/app/game/${gameId}/attack`, { row: target.row, col: target.col });
+    addLog(`⏱ TEMPO ESGOTADO — Tiro automático em ${String.fromCharCode(65 + target.row)}${target.col + 1}`);
+  }
+
   function connectWs() {
     if (connectedRef.current) return;
     ws.connect(
@@ -224,6 +282,11 @@ export default function Game() {
     const isMyAttack = attackerId === user.id;
     if (nextTurn) setCurrentTurn(nextTurn);
 
+    // Se o turno continua sendo meu após um ataque, resetar o timer
+    if (isMyAttack && (!nextTurn || nextTurn === user.id)) {
+      setTurnEpoch((e) => e + 1);
+    }
+
     // Se recebemos um ataque do oponente, ele está de volta
     if (!isMyAttack) setOpponentDisconnected(false);
 
@@ -299,6 +362,14 @@ export default function Game() {
           );
         }
         if (status === "SUNK") addLog("🔥 EMBARCAÇÃO DESTRUÍDA");
+        // Sound + animation
+        if (status === "SUNK") {
+          sfx.playSunk();
+          triggerCellAnimation(row, col, "sunk", isMyAttack ? "enemy" : "my");
+        } else {
+          sfx.playHit();
+          triggerCellAnimation(row, col, "hit", isMyAttack ? "enemy" : "my");
+        }
         break;
       case "MISS":
         if (isMyAttack) {
@@ -318,11 +389,15 @@ export default function Game() {
             `🌊 INIMIGO ERROU — ${String.fromCharCode(65 + row)}${col + 1}`,
           );
         }
+        sfx.playMiss();
+        triggerCellAnimation(row, col, "miss", isMyAttack ? "enemy" : "my");
         break;
       case "GAME_OVER":
         setPhase("FINISHED");
         setWinner(attackerId);
         addLog(`🏁 ${attackerId === user.id ? "VITÓRIA" : "DERROTA"}`);
+        if (attackerId === user.id) sfx.playVictory();
+        else sfx.playDefeat();
         break;
       case "ATTACKED":
         setError("Posição já atacada");
@@ -378,6 +453,11 @@ export default function Game() {
 
   function addLog(message) {
     setBattleLog((prev) => [...prev.slice(-50), { time: new Date(), message }]);
+  }
+
+  function triggerCellAnimation(row, col, type, board) {
+    setAnimatedCell({ row, col, type, board });
+    setTimeout(() => setAnimatedCell(null), 800);
   }
 
   function handlePlaceShip(row, col) {
@@ -514,6 +594,8 @@ export default function Game() {
             setHoveredCell={setHoveredCell}
             sunkMyCells={sunkMyCells}
             sunkEnemyCells={sunkEnemyCells}
+            turnTimer={turnTimer}
+            animatedCell={animatedCell}
           />
         )}
         {phase === "FINISHED" && (
@@ -797,6 +879,8 @@ function PlayingPhase({
   setHoveredCell,
   sunkMyCells,
   sunkEnemyCells,
+  turnTimer,
+  animatedCell,
 }) {
   const logEndRef = useRef(null);
 
@@ -852,7 +936,16 @@ function PlayingPhase({
               {isMyTurn ? "SUA VEZ" : "VEZ DO INIMIGO"}
             </span>
             {isMyTurn && (
-              <div className="w-4 h-4 bg-primary animate-ping rounded-full"></div>
+              <div className={`flex items-center justify-center w-10 h-10 border-2 ${turnTimer <= 5 ? "border-error text-error" : "border-primary text-primary"}`}>
+                <span className="text-lg font-bold" style={{ fontFamily: "var(--font-mono)" }}>
+                  {turnTimer}
+                </span>
+              </div>
+            )}
+            {isMyTurn && turnTimer <= 5 && (
+              <span className="text-[10px] text-error uppercase animate-pulse" style={{ fontFamily: "var(--font-mono)" }}>
+                TIRO AUTOMÁTICO IMINENTE
+              </span>
             )}
           </div>
         </div>
@@ -917,6 +1010,7 @@ function PlayingPhase({
             disabled={true}
             title="SUA FROTA"
             sunkCells={sunkMyCells}
+            animatedCell={animatedCell?.board === "my" ? animatedCell : null}
           />
         </div>
 
@@ -947,6 +1041,7 @@ function PlayingPhase({
             disabled={!isMyTurn}
             title="ÁGUAS INIMIGAS"
             sunkCells={sunkEnemyCells}
+            animatedCell={animatedCell?.board === "enemy" ? animatedCell : null}
           />
         </div>
       </div>
