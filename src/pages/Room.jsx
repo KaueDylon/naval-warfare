@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';
@@ -13,12 +13,16 @@ export default function Room() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
+  const navigatingToGameRef = useRef(false);
 
   useEffect(() => {
     loadRoom();
     connectWs();
     return () => {
-      ws.disconnect();
+      // Só desconecta se NÃO estiver navegando para o game
+      if (!navigatingToGameRef.current) {
+        ws.disconnect();
+      }
     };
   }, [roomId]);
 
@@ -28,6 +32,7 @@ export default function Room() {
       const data = await api.getRoom(roomId);
       setRoom(data);
       if (data.gameId) {
+        navigatingToGameRef.current = true;
         navigate(`/game/${data.gameId}`, { replace: true });
       }
     } catch (err) {
@@ -45,6 +50,7 @@ export default function Room() {
         ws.subscribePersistent('/user/queue/room-joined', (data) => {
           setRoom(data);
           if (data.gameId) {
+            navigatingToGameRef.current = true;
             setTimeout(() => navigate(`/game/${data.gameId}`, { replace: true }), 1000);
           }
         });
@@ -183,7 +189,10 @@ export default function Room() {
               {/* Jogo pronto */}
               {room?.guestName && room?.gameId && (
                 <button
-                  onClick={() => navigate(`/game/${room.gameId}`, { replace: true })}
+                  onClick={() => {
+                    navigatingToGameRef.current = true;
+                    navigate(`/game/${room.gameId}`, { replace: true });
+                  }}
                   className="btn-primary w-full py-4 text-lg"
                 >
                   INICIAR OPERAÇÃO
