@@ -101,6 +101,9 @@ export default function MatchHistory() {
                         </span>
                         Missão #{(match.matchId || '').slice(0, 8)}
                       </p>
+                      <p className="text-on-surface-variant text-xs mt-0.5 truncate">
+                        vs. {victory ? (match.loserId || '').slice(0, 8) : (match.winnerId || '').slice(0, 8)}
+                      </p>
                     </div>
 
                     {/* Data */}
