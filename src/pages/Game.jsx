@@ -32,6 +32,7 @@ export default function Game() {
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
 
   const [selectedShip, setSelectedShip] = useState(null);
   const selectedShipRef = useRef(null);
@@ -68,7 +69,40 @@ export default function Game() {
         setOpponentReady(state.playerAReady || false);
       }
 
-      if (state.phase === "PLAYING" || state.phase === "FINISHED") {
+      if (state.phase === "SETUP") {
+        // Recupera navios já posicionados no backend (ex: reload da página)
+        const myBoard = await api.getBoard(gameId, user.id);
+        setMyGrid(myBoard);
+        // Conta navios já posicionados (células com valor 1)
+        const shipCells = myBoard.flat().filter((v) => v === 1).length;
+        if (shipCells > 0) {
+          // Detecta navios individuais via flood-fill para saber quantos foram colocados
+          const visited = new Set();
+          let shipCount = 0;
+          for (let r = 0; r < 10; r++) {
+            for (let c = 0; c < 10; c++) {
+              if (myBoard[r][c] === 1 && !visited.has(`${r}-${c}`)) {
+                shipCount++;
+                const stack = [[r, c]];
+                while (stack.length) {
+                  const [sr, sc] = stack.pop();
+                  const key = `${sr}-${sc}`;
+                  if (visited.has(key)) continue;
+                  visited.add(key);
+                  if (myBoard[sr]?.[sc] === 1) {
+                    [[sr - 1, sc], [sr + 1, sc], [sr, sc - 1], [sr, sc + 1]].forEach(([nr, nc]) => {
+                      if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr, nc]);
+                    });
+                  }
+                }
+              }
+            }
+          }
+          // Marca os navios como posicionados (usa IDs genéricos baseados na ordem do SHIPS array)
+          const restoredIds = SHIPS.slice(0, shipCount).map((s) => s.id);
+          setPlacedShipsSync(restoredIds);
+        }
+      } else if (state.phase === "PLAYING" || state.phase === "FINISHED") {
         const myBoard = await api.getBoard(gameId, user.id);
         setMyGrid(myBoard);
         if (oppId) {
@@ -156,8 +190,10 @@ export default function Game() {
           );
           break;
         case "PLAYER_DISCONNECTED":
-          if (message.playerId !== user.id)
+          if (message.playerId !== user.id) {
+            setOpponentDisconnected(true);
             addLog("⚠ COMUNICAÇÕES INIMIGAS INTERROMPIDAS");
+          }
           break;
         default:
           break;
@@ -171,6 +207,9 @@ export default function Game() {
     const { row, col, attackerId, nextTurn, status } = message;
     const isMyAttack = attackerId === user.id;
     if (nextTurn) setCurrentTurn(nextTurn);
+
+    // Se recebemos um ataque do oponente, ele está de volta
+    if (!isMyAttack) setOpponentDisconnected(false);
 
     switch (status) {
       case "HIT":
@@ -412,6 +451,16 @@ export default function Game() {
         message={error}
         onClose={() => setError("")}
       />
+
+      {/* Opponent Disconnected Warning */}
+      {opponentDisconnected && phase !== "FINISHED" && (
+        <div className="bg-secondary-container/20 border-b border-secondary px-4 py-2 flex items-center justify-center gap-2 shrink-0">
+          <span className="material-symbols-outlined text-secondary text-sm animate-pulse">wifi_off</span>
+          <p className="text-secondary text-xs uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)" }}>
+            Comunicação com o inimigo interrompida — aguardando reconexão...
+          </p>
+        </div>
+      )}
 
       {/* Main */}
       <main className="flex-1 overflow-auto p-4">
@@ -730,6 +779,34 @@ function PlayingPhase({
 }) {
   const logEndRef = useRef(null);
 
+  // Conta navios afundados via sunkCells (cada grupo conectado = 1 navio)
+  function countSunkShips(sunkCells) {
+    if (!sunkCells || sunkCells.size === 0) return 0;
+    const visited = new Set();
+    let count = 0;
+    for (const key of sunkCells) {
+      if (visited.has(key)) continue;
+      count++;
+      const [startR, startC] = key.split("-").map(Number);
+      const stack = [[startR, startC]];
+      while (stack.length) {
+        const [r, c] = stack.pop();
+        const k = `${r}-${c}`;
+        if (visited.has(k)) continue;
+        visited.add(k);
+        if (sunkCells.has(k)) {
+          [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([nr, nc]) => {
+            if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr, nc]);
+          });
+        }
+      }
+    }
+    return count;
+  }
+
+  const mySunkCount = countSunkShips(sunkMyCells);
+  const enemySunkCount = countSunkShips(sunkEnemyCells);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Battle Header */}
@@ -768,6 +845,25 @@ function PlayingPhase({
               {hoveredCell
                 ? `${String.fromCharCode(65 + hoveredCell.row)} / ${hoveredCell.col + 1}`
                 : "-- / --"}
+            </div>
+          </div>
+          {/* Fleet Status */}
+          <div className="flex gap-4">
+            <div className="text-center">
+              <span className="text-[10px] text-outline uppercase block" style={{ fontFamily: "var(--font-mono)" }}>
+                Sua Frota
+              </span>
+              <span className="text-lg text-primary font-bold" style={{ fontFamily: "var(--font-mono)" }}>
+                {5 - mySunkCount}/5
+              </span>
+            </div>
+            <div className="text-center">
+              <span className="text-[10px] text-outline uppercase block" style={{ fontFamily: "var(--font-mono)" }}>
+                Frota Inimiga
+              </span>
+              <span className="text-lg text-secondary font-bold" style={{ fontFamily: "var(--font-mono)" }}>
+                {5 - enemySunkCount}/5
+              </span>
             </div>
           </div>
         </div>
