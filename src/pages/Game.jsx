@@ -90,8 +90,14 @@ export default function Game() {
                   if (visited.has(key)) continue;
                   visited.add(key);
                   if (myBoard[sr]?.[sc] === 1) {
-                    [[sr - 1, sc], [sr + 1, sc], [sr, sc - 1], [sr, sc + 1]].forEach(([nr, nc]) => {
-                      if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr, nc]);
+                    [
+                      [sr - 1, sc],
+                      [sr + 1, sc],
+                      [sr, sc - 1],
+                      [sr, sc + 1],
+                    ].forEach(([nr, nc]) => {
+                      if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
+                        stack.push([nr, nc]);
                     });
                   }
                 }
@@ -161,6 +167,14 @@ export default function Game() {
 
   function handleGameMessage(message) {
     if (message.type) {
+      // Qualquer evento do oponente (exceto PLAYER_DISCONNECTED) prova que ele reconectou
+      if (
+        message.playerId &&
+        message.playerId !== user.id &&
+        message.type !== "PLAYER_DISCONNECTED"
+      ) {
+        setOpponentDisconnected(false);
+      }
       switch (message.type) {
         case "PLAYER_READY":
           if (message.playerId === user.id) setMyReady(true);
@@ -193,6 +207,8 @@ export default function Game() {
           if (message.playerId !== user.id) {
             setOpponentDisconnected(true);
             addLog("⚠ COMUNICAÇÕES INIMIGAS INTERROMPIDAS");
+            // Auto-dismiss após 0.6s — se o oponente reconectou sem gerar evento
+            setTimeout(() => setOpponentDisconnected(false), 600);
           }
           break;
         default:
@@ -455,8 +471,13 @@ export default function Game() {
       {/* Opponent Disconnected Warning */}
       {opponentDisconnected && phase !== "FINISHED" && (
         <div className="bg-secondary-container/20 border-b border-secondary px-4 py-2 flex items-center justify-center gap-2 shrink-0">
-          <span className="material-symbols-outlined text-secondary text-sm animate-pulse">wifi_off</span>
-          <p className="text-secondary text-xs uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)" }}>
+          <span className="material-symbols-outlined text-secondary text-sm animate-pulse">
+            wifi_off
+          </span>
+          <p
+            className="text-secondary text-xs uppercase tracking-wider"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
             Comunicação com o inimigo interrompida — aguardando reconexão...
           </p>
         </div>
@@ -795,7 +816,12 @@ function PlayingPhase({
         if (visited.has(k)) continue;
         visited.add(k);
         if (sunkCells.has(k)) {
-          [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([nr, nc]) => {
+          [
+            [r - 1, c],
+            [r + 1, c],
+            [r, c - 1],
+            [r, c + 1],
+          ].forEach(([nr, nc]) => {
             if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr, nc]);
           });
         }
@@ -850,18 +876,30 @@ function PlayingPhase({
           {/* Fleet Status */}
           <div className="flex gap-4">
             <div className="text-center">
-              <span className="text-[10px] text-outline uppercase block" style={{ fontFamily: "var(--font-mono)" }}>
+              <span
+                className="text-[10px] text-outline uppercase block"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
                 Sua Frota
               </span>
-              <span className="text-lg text-primary font-bold" style={{ fontFamily: "var(--font-mono)" }}>
+              <span
+                className="text-lg text-primary font-bold"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
                 {5 - mySunkCount}/5
               </span>
             </div>
             <div className="text-center">
-              <span className="text-[10px] text-outline uppercase block" style={{ fontFamily: "var(--font-mono)" }}>
+              <span
+                className="text-[10px] text-outline uppercase block"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
                 Frota Inimiga
               </span>
-              <span className="text-lg text-secondary font-bold" style={{ fontFamily: "var(--font-mono)" }}>
+              <span
+                className="text-lg text-secondary font-bold"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
                 {5 - enemySunkCount}/5
               </span>
             </div>
