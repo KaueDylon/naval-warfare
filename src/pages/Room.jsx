@@ -17,7 +17,9 @@ export default function Room() {
   useEffect(() => {
     loadRoom();
     connectWs();
-    return () => {};
+    return () => {
+      ws.disconnect();
+    };
   }, [roomId]);
 
   async function loadRoom() {
