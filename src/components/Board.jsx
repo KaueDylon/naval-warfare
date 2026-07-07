@@ -1,6 +1,3 @@
-import { useMemo } from 'react';
-import { ShipCellSprite, ShipTypeLabel, detectSunkShipsWithTypes } from './ShipSprites';
-
 export default function Board({
   grid,
   onCellClick,
@@ -12,32 +9,11 @@ export default function Board({
   ghostShip = null,
   hoveredCell = null,
   sunkCells = new Set(), // Set de "row-col" — células de navios afundados
-  shipTypesMap = new Map(), // Map de "row-col" → "CARRIER" etc. (do backend)
   animatedCell = null, // {row, col, type} — célula com animação ativa
 }) {
   const rows = 'ABCDEFGHIJ'.split('');
   const cols = Array.from({ length: 10 }, (_, i) => i + 1);
 
-  // Detectar navios afundados e mapear cada célula ao seu sprite info
-  const sunkShipMap = useMemo(() => {
-    const ships = detectSunkShipsWithTypes(sunkCells, shipTypesMap);
-    const map = new Map(); // key "row-col" → { shipType, cellIndex, totalCells, horizontal, isCenter }
-    for (const ship of ships) {
-      const centerIdx = Math.floor(ship.cells.length / 2);
-      ship.cells.forEach((cell, idx) => {
-        map.set(`${cell.row}-${cell.col}`, {
-          shipType: ship.shipType,
-          cellIndex: idx,
-          totalCells: ship.size,
-          horizontal: ship.horizontal,
-          isCenter: idx === centerIdx,
-        });
-      });
-    }
-    return map;
-  }, [sunkCells, shipTypesMap]);
-
-  // Returns Set of "row-col" strings for the ghost preview
   function getGhostCells() {
     if (!ghostShip || !hoveredCell || isOpponent) return new Set();
     const { size, horizontal } = ghostShip;
@@ -98,22 +74,17 @@ export default function Board({
 
   function getCellContent(value, rowIdx, colIdx) {
     const key = `${rowIdx}-${colIdx}`;
-    const spriteInfo = sunkShipMap.get(key);
 
-    // Se é célula de navio afundado — mostrar sprite do navio
-    if (spriteInfo) {
+    // Célula de navio afundado — manter estilo visual de sunk (sem sprite)
+    if (sunkCells.has(key)) {
       return (
-        <>
-          <ShipCellSprite
-            shipType={spriteInfo.shipType}
-            cellIndex={spriteInfo.cellIndex}
-            totalCells={spriteInfo.totalCells}
-            horizontal={spriteInfo.horizontal}
-          />
-          {spriteInfo.isCenter && (
-            <ShipTypeLabel shipType={spriteInfo.shipType} />
-          )}
-        </>
+        <div
+          className="w-3 h-3 rounded-full"
+          style={{
+            backgroundColor: 'rgba(255,140,0,0.9)',
+            boxShadow: '0 0 10px rgba(255,140,0,0.6)',
+          }}
+        />
       );
     }
 

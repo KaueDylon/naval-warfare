@@ -690,8 +690,6 @@ export default function Game() {
             setHoveredCell={setHoveredCell}
             sunkMyCells={sunkMyCells}
             sunkEnemyCells={sunkEnemyCells}
-            myShipTypes={myShipTypes}
-            enemyShipTypes={enemyShipTypes}
             turnTimer={turnTimer}
             animatedCell={animatedCell}
           />
@@ -977,8 +975,6 @@ function PlayingPhase({
   setHoveredCell,
   sunkMyCells,
   sunkEnemyCells,
-  myShipTypes,
-  enemyShipTypes,
   turnTimer,
   animatedCell,
 }) {
@@ -1110,7 +1106,6 @@ function PlayingPhase({
             disabled={true}
             title="SUA FROTA"
             sunkCells={sunkMyCells}
-            shipTypesMap={myShipTypes}
             animatedCell={animatedCell?.board === "my" ? animatedCell : null}
           />
         </div>
@@ -1142,7 +1137,6 @@ function PlayingPhase({
             disabled={!isMyTurn}
             title="ÁGUAS INIMIGAS"
             sunkCells={sunkEnemyCells}
-            shipTypesMap={enemyShipTypes}
             animatedCell={animatedCell?.board === "enemy" ? animatedCell : null}
           />
         </div>
