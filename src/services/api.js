@@ -125,8 +125,40 @@ export function getGameState(gameId) {
   return request(`/game/${gameId}/state`);
 }
 
-export function getBoard(gameId, targetId) {
-  return request(`/game/${gameId}/board/${targetId}`);
+export async function getBoard(gameId, targetId) {
+  const raw = await request(`/game/${gameId}/board/${targetId}`);
+  // Backend retorna [{value, shipType}, ...] por célula — normalizar
+  return parseBoard(raw);
+}
+
+/**
+ * Parseia o board do backend.
+ * Retorna { grid: number[][], shipTypes: Map<"row-col", string> }
+ * - grid: matriz 10x10 com valores numéricos (0=água, 1=navio, 2=miss, 3=hit)
+ * - shipTypes: mapa de coordenadas para o tipo do navio (ex: "CARRIER", "DESTROYER")
+ */
+export function parseBoard(raw) {
+  const grid = [];
+  const shipTypes = new Map();
+
+  for (let r = 0; r < raw.length; r++) {
+    const row = [];
+    for (let c = 0; c < raw[r].length; c++) {
+      const cell = raw[r][c];
+      if (typeof cell === 'object' && cell !== null) {
+        row.push(cell.value);
+        if (cell.shipType) {
+          shipTypes.set(`${r}-${c}`, cell.shipType);
+        }
+      } else {
+        // Fallback: se o backend ainda retornar número puro (compatibilidade)
+        row.push(cell);
+      }
+    }
+    grid.push(row);
+  }
+
+  return { grid, shipTypes };
 }
 
 // Ranking

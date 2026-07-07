@@ -1,3 +1,6 @@
+import { useMemo } from 'react';
+import { ShipCellSprite, ShipTypeLabel, detectSunkShipsWithTypes } from './ShipSprites';
+
 export default function Board({
   grid,
   onCellClick,
@@ -9,10 +12,30 @@ export default function Board({
   ghostShip = null,
   hoveredCell = null,
   sunkCells = new Set(), // Set de "row-col" — células de navios afundados
+  shipTypesMap = new Map(), // Map de "row-col" → "CARRIER" etc. (do backend)
   animatedCell = null, // {row, col, type} — célula com animação ativa
 }) {
   const rows = 'ABCDEFGHIJ'.split('');
   const cols = Array.from({ length: 10 }, (_, i) => i + 1);
+
+  // Detectar navios afundados e mapear cada célula ao seu sprite info
+  const sunkShipMap = useMemo(() => {
+    const ships = detectSunkShipsWithTypes(sunkCells, shipTypesMap);
+    const map = new Map(); // key "row-col" → { shipType, cellIndex, totalCells, horizontal, isCenter }
+    for (const ship of ships) {
+      const centerIdx = Math.floor(ship.cells.length / 2);
+      ship.cells.forEach((cell, idx) => {
+        map.set(`${cell.row}-${cell.col}`, {
+          shipType: ship.shipType,
+          cellIndex: idx,
+          totalCells: ship.size,
+          horizontal: ship.horizontal,
+          isCenter: idx === centerIdx,
+        });
+      });
+    }
+    return map;
+  }, [sunkCells, shipTypesMap]);
 
   // Returns Set of "row-col" strings for the ghost preview
   function getGhostCells() {
@@ -23,7 +46,7 @@ export default function Board({
     for (let i = 0; i < size; i++) {
       const r = horizontal ? row : row + i;
       const c = horizontal ? col + i : col;
-      if (r >= 10 || c >= 10) return new Set(); // out of bounds — show nothing, flagged by isGhostValid
+      if (r >= 10 || c >= 10) return new Set();
       cells.add(`${r}-${c}`);
     }
     return cells;
@@ -45,12 +68,12 @@ export default function Board({
   const ghostCells = getGhostCells();
   const ghostValid = isGhostValid();
 
-  // Use inline styles for ghost colors — Tailwind purges dynamic class names at build time
   const GHOST_BG     = ghostValid ? 'rgba(218,199,105,0.28)' : 'rgba(255,180,171,0.28)';
   const GHOST_BORDER = ghostValid ? 'rgba(218,199,105,0.75)' : 'rgba(255,180,171,0.75)';
 
   function getCellStyle(value, rowIdx, colIdx) {
-    if (ghostCells.has(`${rowIdx}-${colIdx}`)) {
+    const key = `${rowIdx}-${colIdx}`;
+    if (ghostCells.has(key)) {
       return {
         backgroundColor: GHOST_BG,
         outline: `2px solid ${GHOST_BORDER}`,
@@ -59,19 +82,41 @@ export default function Board({
         zIndex: 5,
       };
     }
-    if (sunkCells.has(`${rowIdx}-${colIdx}`)) {
+    if (sunkCells.has(key)) {
       return {
-        backgroundColor: 'rgba(255,140,0,0.18)',
-        outline: '2px solid rgba(255,140,0,0.6)',
+        backgroundColor: 'rgba(255,140,0,0.12)',
+        outline: '2px solid rgba(255,140,0,0.5)',
         outlineOffset: '-2px',
+        position: 'relative',
+        overflow: 'hidden',
       };
     }
-    if (value === 3) return { backgroundColor: 'rgba(255,180,171,0.08)' };
+    if (value === 3) return { backgroundColor: 'rgba(255,180,171,0.08)', position: 'relative' };
     if (value === 1 && !isOpponent) return { backgroundColor: 'rgba(196,202,167,0.15)' };
     return {};
   }
 
   function getCellContent(value, rowIdx, colIdx) {
+    const key = `${rowIdx}-${colIdx}`;
+    const spriteInfo = sunkShipMap.get(key);
+
+    // Se é célula de navio afundado — mostrar sprite do navio
+    if (spriteInfo) {
+      return (
+        <>
+          <ShipCellSprite
+            shipType={spriteInfo.shipType}
+            cellIndex={spriteInfo.cellIndex}
+            totalCells={spriteInfo.totalCells}
+            horizontal={spriteInfo.horizontal}
+          />
+          {spriteInfo.isCenter && (
+            <ShipTypeLabel shipType={spriteInfo.shipType} />
+          )}
+        </>
+      );
+    }
+
     if (value === 2) {
       return (
         <span
@@ -83,15 +128,12 @@ export default function Board({
       );
     }
     if (value === 3) {
-      const isSunk = sunkCells.has(`${rowIdx}-${colIdx}`);
       return (
         <div
           className="w-3 h-3 rounded-full"
           style={{
-            backgroundColor: isSunk ? 'rgba(255,140,0,0.9)' : 'rgba(255,180,171,0.9)',
-            boxShadow: isSunk
-              ? '0 0 10px rgba(255,140,0,0.7)'
-              : '0 0 10px rgba(255,180,171,0.6)',
+            backgroundColor: 'rgba(255,180,171,0.9)',
+            boxShadow: '0 0 10px rgba(255,180,171,0.6)',
           }}
         />
       );
@@ -123,10 +165,8 @@ export default function Board({
         className="aspect-square bg-surface-container border-2 border-outline relative p-2 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]"
         onMouseLeave={handleBoardMouseLeave}
       >
-        {/* Scanline overlay — pointer-events-none so it doesn't swallow mouse events */}
         <div className="scanline-overlay pointer-events-none" />
 
-        {/* Grid */}
         <div
           className="grid h-full w-full"
           style={{
@@ -134,10 +174,8 @@ export default function Board({
             gridTemplateRows: 'auto repeat(10, 1fr)',
           }}
         >
-          {/* Empty corner */}
           <div />
 
-          {/* Column headers */}
           {cols.map((col) => (
             <div
               key={`col-${col}`}
@@ -148,10 +186,8 @@ export default function Board({
             </div>
           ))}
 
-          {/* Rows */}
           {rows.map((row, rowIdx) => (
             <div key={`row-${row}`} className="contents">
-              {/* Row label */}
               <div
                 className="flex items-center justify-center text-outline"
                 style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}
@@ -159,7 +195,6 @@ export default function Board({
                 {row}
               </div>
 
-              {/* Cells */}
               {cols.map((col, colIdx) => {
                 const value  = grid?.[rowIdx]?.[colIdx] ?? 0;
                 const isAttacked = value === 2 || value === 3;

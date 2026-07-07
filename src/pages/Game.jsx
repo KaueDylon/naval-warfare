@@ -28,6 +28,8 @@ export default function Game() {
   const prevEnemyGridRef = useRef(createEmptyGrid());
   const [sunkEnemyCells, setSunkEnemyCells] = useState(new Set()); // "row-col"
   const [sunkMyCells, setSunkMyCells] = useState(new Set());
+  const [enemyShipTypes, setEnemyShipTypes] = useState(new Map()); // "row-col" → "CARRIER" etc.
+  const [myShipTypes, setMyShipTypes] = useState(new Map());
   const [currentTurn, setCurrentTurn] = useState(null);
   const [opponentId, setOpponentId] = useState(null);
   const [winner, setWinner] = useState(null);
@@ -77,18 +79,20 @@ export default function Game() {
 
       if (state.phase === "SETUP") {
         // Recupera navios já posicionados no backend (ex: reload da página)
-        const myBoard = await api.getBoard(gameId, user.id);
+        const { grid: myBoard, shipTypes: myTypes } = await api.getBoard(gameId, user.id);
         setMyGrid(myBoard);
+        setMyShipTypes(myTypes);
         // Conta navios já posicionados (células com valor 1)
         const shipCells = myBoard.flat().filter((v) => v === 1).length;
         if (shipCells > 0) {
           // Detecta navios individuais via flood-fill para saber quantos foram colocados
           const visited = new Set();
-          let shipCount = 0;
+          const detectedShipIds = [];
           for (let r = 0; r < 10; r++) {
             for (let c = 0; c < 10; c++) {
               if (myBoard[r][c] === 1 && !visited.has(`${r}-${c}`)) {
-                shipCount++;
+                // Pegar o shipType da primeira célula deste navio
+                const cellType = myTypes.get(`${r}-${c}`);
                 const stack = [[r, c]];
                 while (stack.length) {
                   const [sr, sc] = stack.pop();
@@ -107,19 +111,86 @@ export default function Game() {
                     });
                   }
                 }
+                // Mapear o shipType do backend para o id local
+                const shipId = cellType ? cellType.toLowerCase() : null;
+                if (shipId) detectedShipIds.push(shipId);
               }
             }
           }
-          // Marca os navios como posicionados (usa IDs genéricos baseados na ordem do SHIPS array)
-          const restoredIds = SHIPS.slice(0, shipCount).map((s) => s.id);
-          setPlacedShipsSync(restoredIds);
+          setPlacedShipsSync(detectedShipIds);
         }
       } else if (state.phase === "PLAYING" || state.phase === "FINISHED") {
-        const myBoard = await api.getBoard(gameId, user.id);
+        const { grid: myBoard, shipTypes: myTypes } = await api.getBoard(gameId, user.id);
         setMyGrid(myBoard);
+        setMyShipTypes(myTypes);
         if (oppId) {
-          const oppBoard = await api.getBoard(gameId, oppId);
+          const { grid: oppBoard, shipTypes: oppTypes } = await api.getBoard(gameId, oppId);
           setEnemyGrid(oppBoard);
+          setEnemyShipTypes(oppTypes);
+          // Reconstruir sunkCells a partir dos shipTypes do oponente (células com value=3 que têm shipType)
+          // e do próprio board
+          const newSunkEnemy = new Set();
+          const newSunkMy = new Set();
+          // Para o inimigo: células com value=3 que pertencem a um navio completamente afundado
+          // Simplificação: toda célula com value=3 no board inimigo que tem shipType revelado
+          // é parte de um navio — mas precisamos verificar se TODO o navio foi afundado
+          // Por ora, recalcular via flood-fill grupos de 3s no grid inimigo
+          const visitedEnemy = new Set();
+          for (let r = 0; r < 10; r++) {
+            for (let c = 0; c < 10; c++) {
+              if (oppBoard[r][c] === 3 && !visitedEnemy.has(`${r}-${c}`)) {
+                const group = [];
+                const stack = [[r, c]];
+                while (stack.length) {
+                  const [sr, sc] = stack.pop();
+                  const key = `${sr}-${sc}`;
+                  if (visitedEnemy.has(key)) continue;
+                  if (oppBoard[sr]?.[sc] !== 3) continue;
+                  visitedEnemy.add(key);
+                  group.push(key);
+                  [[sr-1,sc],[sr+1,sc],[sr,sc-1],[sr,sc+1]].forEach(([nr,nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  });
+                }
+                // Verificar se todas as células do grupo têm shipType (= navio completamente revelado = afundado)
+                const allHaveType = group.every(k => oppTypes.has(k));
+                if (allHaveType && group.length >= 2) {
+                  group.forEach(k => newSunkEnemy.add(k));
+                }
+              }
+            }
+          }
+          setSunkEnemyCells(newSunkEnemy);
+
+          // Para meus navios: grupos de 3s conectados
+          const visitedMy = new Set();
+          for (let r = 0; r < 10; r++) {
+            for (let c = 0; c < 10; c++) {
+              if (myBoard[r][c] === 3 && !visitedMy.has(`${r}-${c}`)) {
+                const group = [];
+                const stack = [[r, c]];
+                let shipType = null;
+                while (stack.length) {
+                  const [sr, sc] = stack.pop();
+                  const key = `${sr}-${sc}`;
+                  if (visitedMy.has(key)) continue;
+                  if (myBoard[sr]?.[sc] !== 3) continue;
+                  visitedMy.add(key);
+                  group.push(key);
+                  if (!shipType) shipType = myTypes.get(key);
+                  [[sr-1,sc],[sr+1,sc],[sr,sc-1],[sr,sc+1]].forEach(([nr,nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  });
+                }
+                // Verificar se o navio inteiro foi afundado (tamanho do grupo == tamanho do navio)
+                const shipSizes = { CARRIER: 5, BATTLESHIP: 4, CRUISER: 3, SUBMARINE: 3, DESTROYER: 2 };
+                if (shipType && group.length === shipSizes[shipType]) {
+                  group.forEach(k => newSunkMy.add(k));
+                }
+              }
+            }
+          }
+          setSunkMyCells(newSunkMy);
         }
       }
     } catch (err) {
@@ -278,7 +349,7 @@ export default function Game() {
   }
 
   function handleAttackResult(message) {
-    const { row, col, attackerId, nextTurn, status } = message;
+    const { row, col, attackerId, nextTurn, status, shipType } = message;
     const isMyAttack = attackerId === user.id;
     if (nextTurn) setCurrentTurn(nextTurn);
 
@@ -290,10 +361,27 @@ export default function Game() {
     // Se recebemos um ataque do oponente, ele está de volta
     if (!isMyAttack) setOpponentDisconnected(false);
 
+    // Nomes legíveis dos tipos de navio
+    const SHIP_TYPE_NAMES = {
+      CARRIER: "PORTA-AVIÕES",
+      BATTLESHIP: "ENCOURAÇADO",
+      CRUISER: "CRUZADOR",
+      SUBMARINE: "SUBMARINO",
+      DESTROYER: "DESTROYER",
+    };
+
     switch (status) {
       case "HIT":
       case "SUNK":
         if (isMyAttack) {
+          // Registrar o shipType no mapa de tipos do inimigo
+          if (shipType) {
+            setEnemyShipTypes((prev) => {
+              const next = new Map(prev);
+              next.set(`${row}-${col}`, shipType);
+              return next;
+            });
+          }
           setEnemyGrid((prev) => {
             const next = prev.map((r) => [...r]);
             next[row][col] = 3;
@@ -361,7 +449,10 @@ export default function Game() {
             `💥 ATAQUE RECEBIDO — ${String.fromCharCode(65 + row)}${col + 1} — ${status === "HIT" ? "ACERTOU" : "AFUNDOU"}`,
           );
         }
-        if (status === "SUNK") addLog("🔥 EMBARCAÇÃO DESTRUÍDA");
+        if (status === "SUNK") {
+          const typeName = shipType ? SHIP_TYPE_NAMES[shipType] || shipType : "EMBARCAÇÃO";
+          addLog(`🔥 ${typeName} DESTRUÍDO!`);
+        }
         // Sound + animation
         if (status === "SUNK") {
           sfx.playSunk();
@@ -436,7 +527,10 @@ export default function Game() {
         setSelectedShipSync(null);
       }
       setError("");
-      api.getBoard(gameId, user.id).then(setMyGrid).catch(console.error);
+      api.getBoard(gameId, user.id).then(({ grid, shipTypes }) => {
+        setMyGrid(grid);
+        setMyShipTypes(shipTypes);
+      }).catch(console.error);
       addLog(`Embarcação posicionada (${placedShipsRef.current.length}/5)`);
     } else if (status === "INVALID") {
       setError(
@@ -445,6 +539,7 @@ export default function Game() {
     } else if (status === "BOARD_CLEARED") {
       setPlacedShipsSync([]);
       setMyGrid(createEmptyGrid());
+      setMyShipTypes(new Map());
       setSelectedShipSync(null);
       setError("");
       addLog("Tabuleiro limpo — todas as embarcações recolhidas");
@@ -477,6 +572,7 @@ export default function Game() {
       col,
       size: ship.size,
       orientation: horizontal,
+      shipType: ship.id.toUpperCase(),
     });
   }
 
@@ -594,6 +690,8 @@ export default function Game() {
             setHoveredCell={setHoveredCell}
             sunkMyCells={sunkMyCells}
             sunkEnemyCells={sunkEnemyCells}
+            myShipTypes={myShipTypes}
+            enemyShipTypes={enemyShipTypes}
             turnTimer={turnTimer}
             animatedCell={animatedCell}
           />
@@ -879,6 +977,8 @@ function PlayingPhase({
   setHoveredCell,
   sunkMyCells,
   sunkEnemyCells,
+  myShipTypes,
+  enemyShipTypes,
   turnTimer,
   animatedCell,
 }) {
@@ -1010,6 +1110,7 @@ function PlayingPhase({
             disabled={true}
             title="SUA FROTA"
             sunkCells={sunkMyCells}
+            shipTypesMap={myShipTypes}
             animatedCell={animatedCell?.board === "my" ? animatedCell : null}
           />
         </div>
@@ -1041,6 +1142,7 @@ function PlayingPhase({
             disabled={!isMyTurn}
             title="ÁGUAS INIMIGAS"
             sunkCells={sunkEnemyCells}
+            shipTypesMap={enemyShipTypes}
             animatedCell={animatedCell?.board === "enemy" ? animatedCell : null}
           />
         </div>
