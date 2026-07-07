@@ -35,6 +35,13 @@ async function request(endpoint, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
+    // Token expirado ou inválido — limpa sessão e redireciona
+    if (response.status === 401 && endpoint !== '/auth/login' && endpoint !== '/auth/register') {
+      clearToken();
+      window.location.href = '/login';
+      throw new Error('Sessão expirada. Faça login novamente.');
+    }
+
     const message = data?.message || `Erro ${response.status}`;
     const error = new Error(message);
     error.status = response.status;
