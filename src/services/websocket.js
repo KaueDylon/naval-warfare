@@ -35,7 +35,7 @@ export function connect(token, onConnect, onError) {
     onConnect: () => {
       console.info('[WS] Conectado');
       // Re-subscribe nas subscriptions registradas (reconexão)
-      reconnectSubscriptions.forEach((cb) => cb());
+      reconnectSubscriptions.forEach((entry) => entry.fn());
       if (onConnect) onConnect();
     },
     onStompError: (frame) => {
@@ -80,8 +80,14 @@ export function subscribe(destination, callback) {
 /**
  * Subscribe com auto-resubscribe em reconexão.
  * Usa isso para subscriptions que devem sobreviver à reconexão.
+ * Evita duplicação: se já existe subscription para o mesmo destination, ignora.
  */
 export function subscribePersistent(destination, callback) {
+  // Evita duplicação de subscriptions para o mesmo destino
+  if (reconnectSubscriptions.some((entry) => entry.destination === destination)) {
+    return;
+  }
+
   const doSubscribe = () => {
     if (stompClient && stompClient.connected) {
       stompClient.subscribe(destination, (message) => {
@@ -98,8 +104,8 @@ export function subscribePersistent(destination, callback) {
   // Subscribe agora
   doSubscribe();
 
-  // Registra para reconexão
-  reconnectSubscriptions.push(doSubscribe);
+  // Registra para reconexão (com destination para dedup)
+  reconnectSubscriptions.push({ destination, fn: doSubscribe });
 }
 
 export function publish(destination, body = {}) {
