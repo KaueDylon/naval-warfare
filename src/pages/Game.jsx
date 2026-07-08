@@ -213,6 +213,9 @@ export default function Game() {
       if (e.key === "r" || e.key === "R") {
         setHorizontal((h) => !h);
       }
+      if (e.key === "c" || e.key === "C") {
+        handleClearBoard();
+      }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);

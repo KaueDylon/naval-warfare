@@ -1,5 +1,5 @@
-import SockJS from 'sockjs-client';
-import { Client } from '@stomp/stompjs';
+import SockJS from "sockjs-client";
+import { Client } from "@stomp/stompjs";
 
 let stompClient = null;
 let currentToken = null;
@@ -25,7 +25,8 @@ export function connect(token, onConnect, onError) {
   }
 
   stompClient = new Client({
-    webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+    webSocketFactory: () =>
+      new SockJS("https://batalha-naval-9gfm.onrender.com/ws"),
     connectHeaders: {
       Authorization: `Bearer ${token}`,
     },
@@ -33,17 +34,17 @@ export function connect(token, onConnect, onError) {
     heartbeatOutgoing: 10000,
     reconnectDelay: 3000, // Reconecta automaticamente após 3s
     onConnect: () => {
-      console.info('[WS] Conectado');
+      console.info("[WS] Conectado");
       // Re-subscribe nas subscriptions registradas (reconexão)
       reconnectSubscriptions.forEach((entry) => entry.fn());
       if (onConnect) onConnect();
     },
     onStompError: (frame) => {
-      console.error('[WS] STOMP error:', frame.headers?.message);
+      console.error("[WS] STOMP error:", frame.headers?.message);
       if (onError) onError(frame);
     },
     onWebSocketClose: () => {
-      console.warn('[WS] Conexão WebSocket fechada — tentando reconectar...');
+      console.warn("[WS] Conexão WebSocket fechada — tentando reconectar...");
     },
   });
 
@@ -61,7 +62,7 @@ export function disconnect() {
 
 export function subscribe(destination, callback) {
   if (!stompClient || !stompClient.connected) {
-    console.error('[WS] Cliente não conectado');
+    console.error("[WS] Cliente não conectado");
     return null;
   }
 
@@ -84,7 +85,9 @@ export function subscribe(destination, callback) {
  */
 export function subscribePersistent(destination, callback) {
   // Evita duplicação de subscriptions para o mesmo destino
-  if (reconnectSubscriptions.some((entry) => entry.destination === destination)) {
+  if (
+    reconnectSubscriptions.some((entry) => entry.destination === destination)
+  ) {
     return;
   }
 
@@ -110,12 +113,12 @@ export function subscribePersistent(destination, callback) {
 
 export function publish(destination, body = {}) {
   if (!stompClient || !stompClient.connected) {
-    console.error('[WS] Cliente não conectado — mensagem não enviada');
+    console.error("[WS] Cliente não conectado — mensagem não enviada");
     return false;
   }
   stompClient.publish({
     destination,
-    body: typeof body === 'string' ? body : JSON.stringify(body),
+    body: typeof body === "string" ? body : JSON.stringify(body),
   });
   return true;
 }
