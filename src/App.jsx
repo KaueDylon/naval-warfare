@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import SelectNation from './pages/SelectNation';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
 import Ranking from './pages/Ranking';
@@ -9,8 +10,8 @@ import MatchHistory from './pages/MatchHistory';
 import Room from './pages/Room';
 import Game from './pages/Game';
 
-function ProtectedRoute({ children }) {
-  const { token, loading } = useAuth();
+function ProtectedRoute({ children, allowWithoutNation = false }) {
+  const { token, user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -22,6 +23,11 @@ function ProtectedRoute({ children }) {
 
   if (!token) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Redireciona para seleção de nação se ainda não escolheu
+  if (!allowWithoutNation && user && !user.nation) {
+    return <Navigate to="/select-nation" replace />;
   }
 
   return children;
@@ -64,6 +70,14 @@ export default function App() {
               <PublicRoute>
                 <Register />
               </PublicRoute>
+            }
+          />
+          <Route
+            path="/select-nation"
+            element={
+              <ProtectedRoute allowWithoutNation>
+                <SelectNation />
+              </ProtectedRoute>
             }
           />
           <Route
