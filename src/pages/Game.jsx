@@ -35,6 +35,7 @@ export default function Game() {
   const [opponentId, setOpponentId] = useState(null);
   const [opponentProfile, setOpponentProfile] = useState(null);
   const [showBattleIntro, setShowBattleIntro] = useState(false);
+  const battleIntroRequestedRef = useRef(false);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -210,12 +211,25 @@ export default function Game() {
     };
   }, [gameId]);
 
-  // Busca o perfil do oponente assim que seu ID é conhecido
+  // Busca o perfil do oponente assim que seu ID é conhecido.
+  // Se o GAME_STARTED já chegou antes do fetch completar, exibe o intro após o fetch.
   useEffect(() => {
     if (!opponentId) return;
     api.getPlayer(opponentId)
-      .then(setOpponentProfile)
-      .catch(() => {}); // falha silenciosa — intro ainda funciona sem portrait/nação
+      .then((profile) => {
+        setOpponentProfile(profile);
+        if (battleIntroRequestedRef.current) {
+          setShowBattleIntro(true);
+          battleIntroRequestedRef.current = false;
+        }
+      })
+      .catch(() => {
+        // Fetch falhou — exibe o intro mesmo assim, com dados parciais
+        if (battleIntroRequestedRef.current) {
+          setShowBattleIntro(true);
+          battleIntroRequestedRef.current = false;
+        }
+      });
   }, [opponentId]);
 
   useEffect(() => {
@@ -330,7 +344,13 @@ export default function Game() {
           setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
-          setShowBattleIntro(true);
+          // Se o perfil do oponente já foi carregado, exibe o intro agora.
+          // Caso contrário, sinaliza para exibir assim que o fetch completar.
+          if (opponentProfile) {
+            setShowBattleIntro(true);
+          } else {
+            battleIntroRequestedRef.current = true;
+          }
           loadGameState();
           break;
         case "GAME_OVER":
