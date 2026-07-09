@@ -8,14 +8,14 @@ import TopSecretStamp from "../components/TopSecretStamp";
 const NATIONS = [
   {
     id: "USA",
-    flag: "🇺🇸",
+    flag: "★",
     label: "Estados Unidos",
     description:
       "Em 1941, os EUA abandonam o isolacionismo após Pearl Harbor e mobilizam a maior máquina industrial do mundo para a guerra.",
   },
   {
     id: "UK",
-    flag: "🇬🇧",
+    flag: "♛",
     label: "Reino Unido",
     description:
       "Sozinha contra o Eixo desde 1940, a Royal Navy defende as rotas do Atlântico enquanto resiste aos bombardeios da Blitz.",
@@ -29,7 +29,7 @@ const NATIONS = [
   },
   {
     id: "GERMANY",
-    flag: "🇩🇪",
+    flag: "✠",
     label: "Alemanha",
     description:
       "A Kriegsmarine e seus U-Boots dominam o Atlântico Norte, estrangulando as linhas de suprimento aliadas.",

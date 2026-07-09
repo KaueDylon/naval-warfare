@@ -33,12 +33,12 @@ const NATION_FLAGS = {
 };
 
 const NATION_LABELS = {
-  USA:     'Estados Unidos',
-  UK:      'Reino Unido',
-  USSR:    'União Soviética',
-  GERMANY: 'Alemanha',
-  JAPAN:   'Japão',
-  ITALY:   'Itália',
+  USA: "Estados Unidos",
+  UK: "Reino Unido",
+  USSR: "União Soviética",
+  GERMANY: "Alemanha",
+  JAPAN: "Japão",
+  ITALY: "Itália",
 };
 
 export default function Profile() {
@@ -332,50 +332,6 @@ export default function Profile() {
             </div>
           </div>
         </div>
-
-        {/* Nation Selection */}
-        <SectionCard
-          title={
-            <>
-              NAÇÃO — ALIANÇA{" "}
-              {profile?.nation && (
-                <span className="text-xs text-on-surface-variant ml-2">
-                  (IRREVERSÍVEL)
-                </span>
-              )}
-            </>
-          }
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-            {NATIONS.map((nation) => (
-              <button
-                key={nation}
-                onClick={() => handleSetNation(nation)}
-                disabled={!!profile?.nation}
-                className={`relative p-4 border-2 text-center transition-all ${
-                  selectedNation === nation
-                    ? "border-secondary bg-secondary/15 text-secondary"
-                    : "border-outline-variant text-on-surface-variant hover:border-outline hover:bg-surface-container-high"
-                } ${profile?.nation && profile.nation !== nation ? "opacity-40 cursor-not-allowed" : ""}`}
-              >
-                <span className="text-2xl block mb-1">
-                  {NATION_FLAGS[nation]}
-                </span>
-                <span
-                  className="text-xs font-bold uppercase tracking-widest block"
-                  style={{ fontFamily: "var(--font-headline)" }}
-                >
-                  {NATION_LABELS[nation] || nation}
-                </span>
-                {selectedNation === nation && (
-                  <span className="absolute top-1 right-1 material-symbols-outlined text-secondary text-sm">
-                    check_circle
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </SectionCard>
 
         {/* Portrait Selection */}
         {selectedNation && (
