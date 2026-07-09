@@ -26,18 +26,18 @@ export function AuthProvider({ children }) {
   async function login(email, password) {
     const data = await api.login(email, password);
     api.setToken(data.tokenJWT);
-    setToken(data.tokenJWT);
     const userData = await api.getMe();
     setUser(userData);
+    setToken(data.tokenJWT);
     return userData;
   }
 
   async function register(name, email, password) {
     const data = await api.register(name, email, password);
     api.setToken(data.tokenJWT);
-    setToken(data.tokenJWT);
     const userData = await api.getMe();
     setUser(userData);
+    setToken(data.tokenJWT);
     return userData;
   }
 
