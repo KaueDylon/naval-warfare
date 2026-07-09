@@ -34,7 +34,7 @@ function ProtectedRoute({ children, allowWithoutNation = false }) {
 }
 
 function PublicRoute({ children }) {
-  const { token, loading } = useAuth();
+  const { token, user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -45,7 +45,7 @@ function PublicRoute({ children }) {
   }
 
   if (token) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={user?.nation ? '/' : '/select-nation'} replace />;
   }
 
   return children;
