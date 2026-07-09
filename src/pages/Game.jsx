@@ -35,7 +35,6 @@ export default function Game() {
   const [opponentId, setOpponentId] = useState(null);
   const [opponentProfile, setOpponentProfile] = useState(null);
   const [showBattleIntro, setShowBattleIntro] = useState(false);
-  const battleIntroRequestedRef = useRef(false);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -212,24 +211,11 @@ export default function Game() {
   }, [gameId]);
 
   // Busca o perfil do oponente assim que seu ID é conhecido.
-  // Se o GAME_STARTED já chegou antes do fetch completar, exibe o intro após o fetch.
   useEffect(() => {
     if (!opponentId) return;
     api.getPlayer(opponentId)
-      .then((profile) => {
-        setOpponentProfile(profile);
-        if (battleIntroRequestedRef.current) {
-          setShowBattleIntro(true);
-          battleIntroRequestedRef.current = false;
-        }
-      })
-      .catch(() => {
-        // Fetch falhou — exibe o intro mesmo assim, com dados parciais
-        if (battleIntroRequestedRef.current) {
-          setShowBattleIntro(true);
-          battleIntroRequestedRef.current = false;
-        }
-      });
+      .then(setOpponentProfile)
+      .catch(() => {}); // falha silenciosa — intro exibe com dados parciais
   }, [opponentId]);
 
   useEffect(() => {
@@ -344,13 +330,8 @@ export default function Game() {
           setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
-          // Se o perfil do oponente já foi carregado, exibe o intro agora.
-          // Caso contrário, sinaliza para exibir assim que o fetch completar.
-          if (opponentProfile) {
-            setShowBattleIntro(true);
-          } else {
-            battleIntroRequestedRef.current = true;
-          }
+          // Aguarda 800ms para o fetch do perfil do oponente completar antes de exibir o intro
+          setTimeout(() => setShowBattleIntro(true), 800);
           loadGameState();
           break;
         case "GAME_OVER":
