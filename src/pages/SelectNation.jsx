@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import * as api from "../services/api";
 import AlertBanner from "../components/AlertBanner";
+import TopSecretStamp from "../components/TopSecretStamp";
 
 const NATIONS = [
   {
@@ -78,15 +79,7 @@ export default function SelectNation() {
       <div className="w-full max-w-5xl">
         {/* Cartão Dossiê — Horizontal */}
         <div className="bg-[#ebe2c9] text-[#171305] p-6 relative">
-          {/* Carimbo CLASSIFICADO */}
-          <div className="absolute top-3 right-4 border-4 border-red-700/50 px-3 py-1 rotate-[-6deg]">
-            <span
-              className="text-red-700/50 text-xs font-bold tracking-widest"
-              style={{ fontFamily: "var(--font-headline)" }}
-            >
-              TOP SECRET
-            </span>
-          </div>
+          <TopSecretStamp size="sm" />
 
           {/* Título */}
           <div className="mb-4">

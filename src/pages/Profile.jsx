@@ -10,6 +10,7 @@ import PageHeader, {
 import AlertBanner from "../components/AlertBanner";
 import BottomNav from "../components/BottomNav";
 import SectionCard from "../components/SectionCard";
+import TopSecretStamp from "../components/TopSecretStamp";
 
 const NATIONS = ["USA", "UK", "USSR", "GERMANY", "JAPAN", "ITALY"];
 
@@ -174,15 +175,7 @@ export default function Profile() {
                 <span className="material-symbols-outlined text-7xl text-on-surface-variant/40">
                   person
                 </span>
-                {/* TOP SECRET stamp */}
-                <div className="absolute top-3 right-[-10px] rotate-[-15deg] border-2 border-error px-2 py-0.5 bg-error/10">
-                  <span
-                    className="text-error text-[0.6rem] font-bold uppercase tracking-widest"
-                    style={{ fontFamily: "var(--font-headline)" }}
-                  >
-                    TOP SECRET
-                  </span>
-                </div>
+                <TopSecretStamp variant="mini" />
               </div>
               <p
                 className="text-[0.6rem] text-on-surface-variant uppercase tracking-widest mt-2 text-center"

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AlertBanner from '../components/AlertBanner';
+import TopSecretStamp from '../components/TopSecretStamp';
 
 export default function Register() {
   const { register } = useAuth();
@@ -29,15 +30,7 @@ export default function Register() {
       <div className="w-full max-w-md">
         {/* Cartão Dossiê */}
         <div className="bg-[#ebe2c9] text-[#171305] p-6 sm:p-8 relative">
-          {/* Carimbo TOP SECRET */}
-          <div className="absolute top-4 right-4 border-4 border-red-700/50 px-4 py-2 rotate-[-6deg]">
-            <span
-              className="text-red-700/50 text-lg font-bold tracking-widest"
-              style={{ fontFamily: 'var(--font-headline)' }}
-            >
-              TOP SECRET
-            </span>
-          </div>
+          <TopSecretStamp />
 
           {/* Título */}
           <div className="text-center mb-8 mt-4">
