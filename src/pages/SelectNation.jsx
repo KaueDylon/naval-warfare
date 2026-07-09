@@ -4,51 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import * as api from "../services/api";
 import AlertBanner from "../components/AlertBanner";
 import TopSecretStamp from "../components/TopSecretStamp";
-
-const NATIONS = [
-  {
-    id: "USA",
-    flag: "★",
-    label: "Estados Unidos",
-    description:
-      "Em 1941, os EUA abandonam o isolacionismo após Pearl Harbor e mobilizam a maior máquina industrial do mundo para a guerra.",
-  },
-  {
-    id: "UK",
-    flag: "♛",
-    label: "Reino Unido",
-    description:
-      "Sozinha contra o Eixo desde 1940, a Royal Navy defende as rotas do Atlântico enquanto resiste aos bombardeios da Blitz.",
-  },
-  {
-    id: "USSR",
-    flag: "☭",
-    label: "União Soviética",
-    description:
-      "Invadida pela Operação Barbarossa em junho de 1941, a URSS enfrenta a maior ofensiva terrestre da história.",
-  },
-  {
-    id: "GERMANY",
-    flag: "✠",
-    label: "Alemanha",
-    description:
-      "A Kriegsmarine e seus U-Boots dominam o Atlântico Norte, estrangulando as linhas de suprimento aliadas.",
-  },
-  {
-    id: "JAPAN",
-    flag: "🇯🇵",
-    label: "Japão",
-    description:
-      "O Império Japonês expande seu domínio pelo Pacífico com ataques devastadores a Pearl Harbor e Filipinas.",
-  },
-  {
-    id: "ITALY",
-    flag: "🇮🇹",
-    label: "Itália",
-    description:
-      "A Regia Marina disputa o controle do Mediterrâneo contra a Royal Navy, protegendo rotas para o Norte da África.",
-  },
-];
+import { NATIONS } from "../constants/nations";
 
 export default function SelectNation() {
   const navigate = useNavigate();

@@ -11,35 +11,12 @@ import AlertBanner from "../components/AlertBanner";
 import BottomNav from "../components/BottomNav";
 import SectionCard from "../components/SectionCard";
 import TopSecretStamp from "../components/TopSecretStamp";
-
-const NATIONS = ["USA", "UK", "USSR", "GERMANY", "JAPAN", "ITALY"];
-
-const NATION_PORTRAITS = {
-  USA: ["USA_GENERAL", "USA_ADMIRAL", "USA_PILOT"],
-  UK: ["UK_GENERAL", "UK_ADMIRAL", "UK_PILOT"],
-  USSR: ["USSR_GENERAL", "USSR_ADMIRAL", "USSR_PILOT"],
-  GERMANY: ["GERMANY_GENERAL", "GERMANY_ADMIRAL", "GERMANY_PILOT"],
-  JAPAN: ["JAPAN_GENERAL", "JAPAN_ADMIRAL", "JAPAN_PILOT"],
-  ITALY: ["ITALY_GENERAL", "ITALY_ADMIRAL", "ITALY_PILOT"],
-};
-
-const NATION_FLAGS = {
-  USA: "🇺🇸",
-  UK: "🇬🇧",
-  USSR: "☭",
-  GERMANY: "🇩🇪",
-  JAPAN: "🇯🇵",
-  ITALY: "🇮🇹",
-};
-
-const NATION_LABELS = {
-  USA: "Estados Unidos",
-  UK: "Reino Unido",
-  USSR: "União Soviética",
-  GERMANY: "Alemanha",
-  JAPAN: "Japão",
-  ITALY: "Itália",
-};
+import {
+  NATIONS,
+  NATION_FLAGS,
+  NATION_LABELS,
+  NATION_PORTRAITS,
+} from "../constants/nations";
 
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth();

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import * as api from '../services/api';
-import PageHeader, { BackToHQButton } from '../components/PageHeader';
-import LoadingState from '../components/LoadingState';
-import EmptyState from '../components/EmptyState';
+import { useState, useEffect } from "react";
+import * as api from "../services/api";
+import PageHeader, { BackToHQButton } from "../components/PageHeader";
+import LoadingState from "../components/LoadingState";
+import EmptyState from "../components/EmptyState";
+import { NATION_FLAGS, NATION_LABELS } from "../constants/nations";
 
 export default function Ranking() {
   const [rankings, setRankings] = useState([]);
@@ -22,7 +23,7 @@ export default function Ranking() {
       const data = await api.getRanking(limit, offset);
       setRankings(data || []);
     } catch (err) {
-      console.error('Falha ao carregar ranking:', err);
+      console.error("Falha ao carregar ranking:", err);
     } finally {
       setLoading(false);
     }
@@ -33,7 +34,7 @@ export default function Ranking() {
       const data = await api.getMyRanking();
       setMyRanking(data);
     } catch (err) {
-      console.error('Falha ao carregar minha posição:', err);
+      console.error("Falha ao carregar minha posição:", err);
     }
   }
 
@@ -49,14 +50,25 @@ export default function Ranking() {
           <div className="dispatch-border p-5 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 border-2 border-secondary flex items-center justify-center bg-secondary/10">
-                <span className="material-symbols-outlined text-secondary text-3xl">military_tech</span>
+                <span className="material-symbols-outlined text-secondary text-3xl">
+                  military_tech
+                </span>
               </div>
               <div>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>
+                <p
+                  className="text-[10px] text-on-surface-variant uppercase tracking-widest"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
                   Sua Posição Global
                 </p>
-                <p className="text-3xl text-secondary font-bold" style={{ fontFamily: 'var(--font-mono)' }}>
-                  #{typeof myRanking === 'number' ? myRanking : myRanking.position ?? '—'}
+                <p
+                  className="text-3xl text-secondary font-bold"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
+                  #
+                  {typeof myRanking === "number"
+                    ? myRanking
+                    : (myRanking.position ?? "—")}
                 </p>
               </div>
             </div>
@@ -65,7 +77,10 @@ export default function Ranking() {
 
         {myRanking === -1 && (
           <div className="dispatch-border p-4 text-center">
-            <p className="text-on-surface-variant text-xs uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+            <p
+              className="text-on-surface-variant text-xs uppercase"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
               SEM CLASSIFICAÇÃO — MÍNIMO DE 5 MISSÕES NECESSÁRIO
             </p>
           </div>
@@ -76,21 +91,36 @@ export default function Ranking() {
           {/* Cabeçalho */}
           <div
             className="hidden sm:grid grid-cols-[40px_1fr_70px_50px_50px_65px] gap-2 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            style={{ fontFamily: "var(--font-mono)" }}
           >
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">#</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Comandante</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Nação</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">V</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">D</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">Taxa</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+              #
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+              Comandante
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+              Nação
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">
+              V
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-center">
+              D
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">
+              Taxa
+            </span>
           </div>
 
           {/* Corpo */}
           {loading ? (
             <LoadingState message="CARREGANDO INTELIGÊNCIA..." />
           ) : rankings.length === 0 ? (
-            <EmptyState icon="leaderboard" message="NENHUM REGISTRO ENCONTRADO" />
+            <EmptyState
+              icon="leaderboard"
+              message="NENHUM REGISTRO ENCONTRADO"
+            />
           ) : (
             <div className="divide-y divide-outline-variant">
               {rankings.map((player, index) => {
@@ -99,16 +129,19 @@ export default function Ranking() {
                   <div
                     key={player.playerId || index}
                     className="flex sm:grid sm:grid-cols-[40px_1fr_70px_50px_50px_65px] gap-2 px-4 py-3 items-center hover:bg-surface-container-high transition-colors"
-                    style={{ fontFamily: 'var(--font-mono)' }}
+                    style={{ fontFamily: "var(--font-mono)" }}
                   >
-                    <span className={`text-sm font-bold shrink-0 w-8 ${rank <= 3 ? 'text-secondary' : 'text-on-surface-variant'}`}>
-                      {rank <= 3 ? '★' : ''}{rank}
+                    <span
+                      className={`text-sm font-bold shrink-0 w-8 ${rank <= 3 ? "text-secondary" : "text-on-surface-variant"}`}
+                    >
+                      {rank <= 3 ? "★" : ""}
+                      {rank}
                     </span>
                     <span className="text-on-surface text-sm truncate flex-1">
                       {player.name}
                     </span>
                     <span className="text-primary text-xs shrink-0 hidden sm:block">
-                      {player.nation || '—'}
+                      {player.nation ? `${NATION_FLAGS[player.nation]}` : "—"}
                     </span>
                     <span className="text-secondary text-sm text-center shrink-0 hidden sm:block">
                       {player.wins ?? 0}
@@ -117,7 +150,9 @@ export default function Ranking() {
                       {player.losses ?? 0}
                     </span>
                     <span className="text-on-surface text-sm text-right font-bold shrink-0 ml-auto sm:ml-0">
-                      {player.winrate != null ? `${player.winrate.toFixed(1)}%` : '—'}
+                      {player.winrate != null
+                        ? `${player.winrate.toFixed(1)}%`
+                        : "—"}
                     </span>
                   </div>
                 );
@@ -134,7 +169,10 @@ export default function Ranking() {
             >
               ← ANTERIOR
             </button>
-            <span className="text-xs text-on-surface-variant" style={{ fontFamily: 'var(--font-mono)' }}>
+            <span
+              className="text-xs text-on-surface-variant"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
               {offset + 1}—{offset + rankings.length}
             </span>
             <button
