@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import * as api from "../services/api";
 import AlertBanner from "../components/AlertBanner";
@@ -8,10 +8,15 @@ import { NATIONS } from "../constants/nations";
 
 export default function SelectNation() {
   const navigate = useNavigate();
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Se o jogador já possui nação, redireciona para o menu principal
+  if (user?.nation) {
+    return <Navigate to="/" replace />;
+  }
 
   async function handleConfirm() {
     if (!selected) return;
