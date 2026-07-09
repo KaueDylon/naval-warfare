@@ -7,6 +7,7 @@ import * as sfx from "../services/sounds";
 import Board from "../components/Board";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import AlertBanner from "../components/AlertBanner";
+import BattleIntro from "../components/BattleIntro";
 
 const SHIPS = [
   { name: "Porta-Aviões", size: 5, id: "carrier" },
@@ -32,6 +33,8 @@ export default function Game() {
   const [myShipTypes, setMyShipTypes] = useState(new Map());
   const [currentTurn, setCurrentTurn] = useState(null);
   const [opponentId, setOpponentId] = useState(null);
+  const [opponentProfile, setOpponentProfile] = useState(null);
+  const [showBattleIntro, setShowBattleIntro] = useState(false);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -207,6 +210,14 @@ export default function Game() {
     };
   }, [gameId]);
 
+  // Busca o perfil do oponente assim que seu ID é conhecido
+  useEffect(() => {
+    if (!opponentId) return;
+    api.getPlayer(opponentId)
+      .then(setOpponentProfile)
+      .catch(() => {}); // falha silenciosa — intro ainda funciona sem portrait/nação
+  }, [opponentId]);
+
   useEffect(() => {
     function onKeyDown(e) {
       if (phase !== "SETUP" || myReady) return;
@@ -319,6 +330,7 @@ export default function Game() {
           setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
+          setShowBattleIntro(true);
           loadGameState();
           break;
         case "GAME_OVER":
@@ -646,6 +658,15 @@ export default function Game() {
         message={error}
         onClose={() => setError("")}
       />
+
+      {/* Battle Intro Overlay */}
+      {showBattleIntro && (
+        <BattleIntro
+          me={{ name: user.name, nation: user.nation, portrait: user.portrait }}
+          opponent={opponentProfile}
+          onDismiss={() => setShowBattleIntro(false)}
+        />
+      )}
 
       {/* Opponent Disconnected Warning */}
       {opponentDisconnected && phase !== "FINISHED" && (

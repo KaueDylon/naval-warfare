@@ -80,6 +80,10 @@ export function getMe() {
   return request("/player/me");
 }
 
+export function getPlayer(playerId) {
+  return request(`/player/${playerId}`);
+}
+
 export function updateMe(data) {
   return request("/player/me", {
     method: "PATCH",
