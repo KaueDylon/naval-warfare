@@ -74,24 +74,16 @@ export default function Game() {
       setOpponentId(oppId);
 
       // Busca o perfil do oponente sempre que o ID estiver disponível.
-      // Se o intro estiver pendente (GAME_STARTED chegou antes do fetch),
-      // exibe assim que o perfil estiver pronto.
+      // O useEffect abaixo cuida de exibir o BattleIntro quando
+      // pendingBattleIntroRef + opponentProfile estiverem prontos.
       if (oppId) {
-        api
-          .getPlayer(oppId)
-          .then((profile) => {
-            setOpponentProfile(profile);
-            if (pendingBattleIntroRef.current) {
-              pendingBattleIntroRef.current = false;
-              setShowBattleIntro(true);
-            }
-          })
-          .catch(() => {
-            if (pendingBattleIntroRef.current) {
-              pendingBattleIntroRef.current = false;
-              setShowBattleIntro(true);
-            }
-          });
+        try {
+          const profile = await api.getPlayer(oppId);
+          setOpponentProfile(profile);
+        } catch {
+          // Perfil indisponível — seta um fallback mínimo para o intro funcionar
+          setOpponentProfile((prev) => prev || { name: "???", nation: null, portrait: null });
+        }
       }
 
       if (state.playerAId === user.id) {
@@ -259,7 +251,14 @@ export default function Game() {
     };
   }, [gameId]);
 
-  // Busca o perfil do oponente dentro do loadGameState — não precisa de useEffect separado.
+  // Exibe o BattleIntro assim que o perfil do oponente estiver disponível
+  // e o intro estiver pendente (GAME_STARTED disparou).
+  useEffect(() => {
+    if (pendingBattleIntroRef.current && opponentProfile) {
+      pendingBattleIntroRef.current = false;
+      setShowBattleIntro(true);
+    }
+  }, [opponentProfile]);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -378,8 +377,7 @@ export default function Game() {
           setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
-          // loadGameState buscará o perfil do oponente e exibirá o intro quando pronto.
-          // Se o perfil já estiver carregado, exibe direto; senão marca como pendente.
+          // Marca o intro como pendente e recarrega o estado.
           pendingBattleIntroRef.current = true;
           loadGameState();
           break;
@@ -715,7 +713,7 @@ export default function Game() {
       />
 
       {/* Battle Intro Overlay */}
-      {showBattleIntro && (
+      {showBattleIntro && opponentProfile && (
         <BattleIntro
           me={{ name: user.name, nation: user.nation, portrait: user.portrait }}
           opponent={opponentProfile}
