@@ -132,10 +132,9 @@ export default function Ranking() {
                     style={{ fontFamily: "var(--font-mono)" }}
                   >
                     <span
-                      className={`text-sm font-bold shrink-0 w-8 ${rank <= 3 ? "text-secondary" : "text-on-surface-variant"}`}
+                      className={`text-sm font-bold shrink-0 w-8 ${rank === 1 ? "text-yellow-400" : rank === 2 ? "text-gray-300" : rank === 3 ? "text-amber-600" : "text-on-surface-variant"}`}
                     >
-                      {rank <= 3 ? "★" : ""}
-                      {rank}
+                      {rank <= 3 ? "★" : rank}
                     </span>
                     <span className="text-on-surface text-sm truncate flex-1">
                       {player.name}
