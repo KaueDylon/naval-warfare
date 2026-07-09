@@ -7,7 +7,7 @@ import * as sfx from "../services/sounds";
 import Board from "../components/Board";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import AlertBanner from "../components/AlertBanner";
-import BattleIntro from "../components/BattleIntro";
+
 
 const SHIPS = [
   { name: "Porta-Aviões", size: 5, id: "carrier" },
@@ -33,9 +33,6 @@ export default function Game() {
   const [myShipTypes, setMyShipTypes] = useState(new Map());
   const [currentTurn, setCurrentTurn] = useState(null);
   const [opponentId, setOpponentId] = useState(null);
-  const [opponentProfile, setOpponentProfile] = useState(null);
-  const [showBattleIntro, setShowBattleIntro] = useState(false);
-  const pendingBattleIntroRef = useRef(false);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -72,19 +69,6 @@ export default function Game() {
       const oppId =
         state.playerAId === user.id ? state.playerBId : state.playerAId;
       setOpponentId(oppId);
-
-      // Busca o perfil do oponente sempre que o ID estiver disponível.
-      // O useEffect abaixo cuida de exibir o BattleIntro quando
-      // pendingBattleIntroRef + opponentProfile estiverem prontos.
-      if (oppId) {
-        try {
-          const profile = await api.getPlayer(oppId);
-          setOpponentProfile(profile);
-        } catch {
-          // Perfil indisponível — seta um fallback mínimo para o intro funcionar
-          setOpponentProfile((prev) => prev || { name: "???", nation: null, portrait: null });
-        }
-      }
 
       if (state.playerAId === user.id) {
         setMyReady(state.playerAReady || false);
@@ -251,15 +235,6 @@ export default function Game() {
     };
   }, [gameId]);
 
-  // Exibe o BattleIntro assim que o perfil do oponente estiver disponível
-  // e o intro estiver pendente (GAME_STARTED disparou).
-  useEffect(() => {
-    if (pendingBattleIntroRef.current && opponentProfile) {
-      pendingBattleIntroRef.current = false;
-      setShowBattleIntro(true);
-    }
-  }, [opponentProfile]);
-
   useEffect(() => {
     function onKeyDown(e) {
       if (phase !== "SETUP" || myReady) return;
@@ -377,8 +352,6 @@ export default function Game() {
           setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
-          // Marca o intro como pendente e recarrega o estado.
-          pendingBattleIntroRef.current = true;
           loadGameState();
           break;
         case "GAME_OVER":
@@ -711,15 +684,6 @@ export default function Game() {
         message={error}
         onClose={() => setError("")}
       />
-
-      {/* Battle Intro Overlay */}
-      {showBattleIntro && opponentProfile && (
-        <BattleIntro
-          me={{ name: user.name, nation: user.nation, portrait: user.portrait }}
-          opponent={opponentProfile}
-          onDismiss={() => setShowBattleIntro(false)}
-        />
-      )}
 
       {/* Opponent Disconnected Warning */}
       {opponentDisconnected && phase !== "FINISHED" && (
