@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NATION_FLAGS, NATION_LABELS } from '../constants/nations';
 
 /**
@@ -9,52 +9,53 @@ import { NATION_FLAGS, NATION_LABELS } from '../constants/nations';
 export default function BattleIntro({ me, opponent, onDismiss, duration = 3500 }) {
   const [visible, setVisible] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const dismissedRef = useRef(false);
+  const onDismissRef = useRef(onDismiss);
+
+  // Mantém ref atualizada para evitar stale closure no setTimeout
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  }, [onDismiss]);
 
   useEffect(() => {
-    // Pequeno delay para garantir que a animação de entrada dispare
     const enterTimer = setTimeout(() => setVisible(true), 50);
-    const exitTimer = setTimeout(() => dismiss(), duration);
+    const exitTimer  = setTimeout(() => triggerDismiss(), duration);
     return () => {
       clearTimeout(enterTimer);
       clearTimeout(exitTimer);
     };
   }, []);
 
-  function dismiss() {
-    if (leaving) return;
+  function triggerDismiss() {
+    if (dismissedRef.current) return;
+    dismissedRef.current = true;
     setLeaving(true);
-    setTimeout(() => onDismiss(), 600);
+    setTimeout(() => onDismissRef.current(), 500);
   }
+
+  const show = visible && !leaving;
 
   return (
     <div
-      onClick={dismiss}
-      className={`
-        fixed inset-0 z-50 flex items-center justify-center
-        bg-background/90 backdrop-blur-sm
-        transition-opacity duration-500
-        ${visible && !leaving ? 'opacity-100' : 'opacity-0'}
-        cursor-pointer
-      `}
+      onClick={triggerDismiss}
+      style={{ transition: 'opacity 0.5s', opacity: show ? 1 : 0 }}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm cursor-pointer"
     >
-      {/* Linha horizontal de fundo */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-outline-variant opacity-30" />
+      {/* Linha central decorativa */}
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-outline-variant/30" />
 
-      <div className="relative flex items-center justify-center w-full max-w-3xl px-4 gap-0">
-        {/* Jogador — EU */}
-        <CommanderCard
-          player={me}
-          align="left"
-          visible={visible}
-          label="VOCÊ"
-        />
+      <div className="relative flex items-center justify-center w-full max-w-3xl px-6 gap-4">
+        <CommanderCard player={me}       align="left"  show={show} label="VOCÊ"    delay={100} />
 
         {/* VS */}
-        <div className={`
-          shrink-0 flex flex-col items-center justify-center w-24 z-10
-          transition-all duration-700 delay-300
-          ${visible && !leaving ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}
-        `}>
+        <div
+          className="shrink-0 flex flex-col items-center justify-center w-20 z-10"
+          style={{
+            transition: 'opacity 0.7s 0.3s, transform 0.7s 0.3s',
+            opacity:    show ? 1 : 0,
+            transform:  show ? 'scale(1)' : 'scale(0.4)',
+          }}
+        >
           <div className="border-4 border-error bg-background px-3 py-1 rotate-[-3deg]">
             <span
               className="text-error text-3xl font-black tracking-widest"
@@ -71,23 +72,13 @@ export default function BattleIntro({ me, opponent, onDismiss, duration = 3500 }
           </span>
         </div>
 
-        {/* Jogador — OPONENTE */}
-        <CommanderCard
-          player={opponent}
-          align="right"
-          visible={visible}
-          label="OPONENTE"
-        />
+        <CommanderCard player={opponent} align="right" show={show} label="INIMIGO" delay={200} />
       </div>
 
-      {/* Hint de fechar */}
+      {/* Hint */}
       <p
-        className={`
-          absolute bottom-8 text-[10px] text-on-surface-variant uppercase tracking-widest
-          transition-opacity duration-500 delay-700
-          ${visible && !leaving ? 'opacity-60' : 'opacity-0'}
-        `}
-        style={{ fontFamily: 'var(--font-mono)' }}
+        className="absolute bottom-8 text-[10px] text-on-surface-variant uppercase tracking-widest"
+        style={{ transition: 'opacity 0.5s 0.7s', opacity: show ? 0.6 : 0, fontFamily: 'var(--font-mono)' }}
       >
         Toque para continuar
       </p>
@@ -95,30 +86,25 @@ export default function BattleIntro({ me, opponent, onDismiss, duration = 3500 }
   );
 }
 
-function CommanderCard({ player, align, visible, label, leaving }) {
+function CommanderCard({ player, align, show, label, delay }) {
   const isLeft = align === 'left';
 
-  const translateClass = visible && !leaving
-    ? 'opacity-100 translate-x-0'
-    : isLeft
-      ? 'opacity-0 -translate-x-16'
-      : 'opacity-0 translate-x-16';
-
   return (
-    <div className={`
-      flex-1 flex ${isLeft ? 'flex-row' : 'flex-row-reverse'} items-center
-      gap-4 transition-all duration-700
-      ${isLeft ? 'delay-100' : 'delay-200'}
-      ${translateClass}
-    `}>
+    <div
+      className={`flex-1 flex ${isLeft ? 'flex-row' : 'flex-row-reverse'} items-center gap-4`}
+      style={{
+        transition: `opacity 0.7s ${delay}ms, transform 0.7s ${delay}ms`,
+        opacity:    show ? 1 : 0,
+        transform:  show ? 'translateX(0)' : `translateX(${isLeft ? '-60px' : '60px'})`,
+      }}
+    >
       {/* Portrait */}
       <div className="relative shrink-0">
-        <div className="w-24 h-32 sm:w-32 sm:h-44 border-4 border-outline-variant bg-surface-container-high flex items-center justify-center grayscale">
+        <div className="w-24 h-32 sm:w-32 sm:h-44 border-4 border-outline-variant bg-surface-container-high flex items-center justify-center">
           <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">
             person
           </span>
         </div>
-        {/* Badge de nação no canto */}
         {player?.nation && (
           <div className="absolute -bottom-2 -right-2 bg-surface-container-highest border-2 border-outline-variant px-2 py-0.5 text-base leading-none">
             {NATION_FLAGS[player.nation]}
@@ -150,7 +136,7 @@ function CommanderCard({ player, align, visible, label, leaving }) {
         </p>
         {player?.portrait && (
           <p
-            className="text-[10px] text-on-surface-variant mt-0.5 uppercase tracking-wider"
+            className="text-[10px] text-on-surface-variant mt-0.5 uppercase"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {player.portrait.replace(/_/g, ' ')}
