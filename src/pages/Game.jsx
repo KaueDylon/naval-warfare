@@ -35,6 +35,7 @@ export default function Game() {
   const [opponentId, setOpponentId] = useState(null);
   const [opponentProfile, setOpponentProfile] = useState(null);
   const [showBattleIntro, setShowBattleIntro] = useState(false);
+  const pendingBattleIntroRef = useRef(false);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -72,6 +73,27 @@ export default function Game() {
         state.playerAId === user.id ? state.playerBId : state.playerAId;
       setOpponentId(oppId);
 
+      // Busca o perfil do oponente sempre que o ID estiver disponível.
+      // Se o intro estiver pendente (GAME_STARTED chegou antes do fetch),
+      // exibe assim que o perfil estiver pronto.
+      if (oppId) {
+        api
+          .getPlayer(oppId)
+          .then((profile) => {
+            setOpponentProfile(profile);
+            if (pendingBattleIntroRef.current) {
+              pendingBattleIntroRef.current = false;
+              setShowBattleIntro(true);
+            }
+          })
+          .catch(() => {
+            if (pendingBattleIntroRef.current) {
+              pendingBattleIntroRef.current = false;
+              setShowBattleIntro(true);
+            }
+          });
+      }
+
       if (state.playerAId === user.id) {
         setMyReady(state.playerAReady || false);
         setOpponentReady(state.playerBReady || false);
@@ -82,7 +104,10 @@ export default function Game() {
 
       if (state.phase === "SETUP") {
         // Recupera navios já posicionados no backend (ex: reload da página)
-        const { grid: myBoard, shipTypes: myTypes } = await api.getBoard(gameId, user.id);
+        const { grid: myBoard, shipTypes: myTypes } = await api.getBoard(
+          gameId,
+          user.id,
+        );
         setMyGrid(myBoard);
         setMyShipTypes(myTypes);
         // Conta navios já posicionados (células com valor 1)
@@ -123,11 +148,17 @@ export default function Game() {
           setPlacedShipsSync(detectedShipIds);
         }
       } else if (state.phase === "PLAYING" || state.phase === "FINISHED") {
-        const { grid: myBoard, shipTypes: myTypes } = await api.getBoard(gameId, user.id);
+        const { grid: myBoard, shipTypes: myTypes } = await api.getBoard(
+          gameId,
+          user.id,
+        );
         setMyGrid(myBoard);
         setMyShipTypes(myTypes);
         if (oppId) {
-          const { grid: oppBoard, shipTypes: oppTypes } = await api.getBoard(gameId, oppId);
+          const { grid: oppBoard, shipTypes: oppTypes } = await api.getBoard(
+            gameId,
+            oppId,
+          );
           setEnemyGrid(oppBoard);
           setEnemyShipTypes(oppTypes);
           // Reconstruir sunkCells a partir dos shipTypes do oponente (células com value=3 que têm shipType)
@@ -151,14 +182,20 @@ export default function Game() {
                   if (oppBoard[sr]?.[sc] !== 3) continue;
                   visitedEnemy.add(key);
                   group.push(key);
-                  [[sr-1,sc],[sr+1,sc],[sr,sc-1],[sr,sc+1]].forEach(([nr,nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  [
+                    [sr - 1, sc],
+                    [sr + 1, sc],
+                    [sr, sc - 1],
+                    [sr, sc + 1],
+                  ].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
+                      stack.push([nr, nc]);
                   });
                 }
                 // Verificar se todas as células do grupo têm shipType (= navio completamente revelado = afundado)
-                const allHaveType = group.every(k => oppTypes.has(k));
+                const allHaveType = group.every((k) => oppTypes.has(k));
                 if (allHaveType && group.length >= 2) {
-                  group.forEach(k => newSunkEnemy.add(k));
+                  group.forEach((k) => newSunkEnemy.add(k));
                 }
               }
             }
@@ -181,14 +218,26 @@ export default function Game() {
                   visitedMy.add(key);
                   group.push(key);
                   if (!shipType) shipType = myTypes.get(key);
-                  [[sr-1,sc],[sr+1,sc],[sr,sc-1],[sr,sc+1]].forEach(([nr,nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr,nc]);
+                  [
+                    [sr - 1, sc],
+                    [sr + 1, sc],
+                    [sr, sc - 1],
+                    [sr, sc + 1],
+                  ].forEach(([nr, nc]) => {
+                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
+                      stack.push([nr, nc]);
                   });
                 }
                 // Verificar se o navio inteiro foi afundado (tamanho do grupo == tamanho do navio)
-                const shipSizes = { CARRIER: 5, BATTLESHIP: 4, CRUISER: 3, SUBMARINE: 3, DESTROYER: 2 };
+                const shipSizes = {
+                  CARRIER: 5,
+                  BATTLESHIP: 4,
+                  CRUISER: 3,
+                  SUBMARINE: 3,
+                  DESTROYER: 2,
+                };
                 if (shipType && group.length === shipSizes[shipType]) {
-                  group.forEach(k => newSunkMy.add(k));
+                  group.forEach((k) => newSunkMy.add(k));
                 }
               }
             }
@@ -210,13 +259,7 @@ export default function Game() {
     };
   }, [gameId]);
 
-  // Busca o perfil do oponente assim que seu ID é conhecido.
-  useEffect(() => {
-    if (!opponentId) return;
-    api.getPlayer(opponentId)
-      .then(setOpponentProfile)
-      .catch(() => {}); // falha silenciosa — intro exibe com dados parciais
-  }, [opponentId]);
+  // Busca o perfil do oponente dentro do loadGameState — não precisa de useEffect separado.
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -280,8 +323,13 @@ export default function Game() {
     }
     if (available.length === 0) return;
     const target = available[Math.floor(Math.random() * available.length)];
-    ws.publish(`/app/game/${gameId}/attack`, { row: target.row, col: target.col });
-    addLog(`⏱ TEMPO ESGOTADO — Tiro automático em ${String.fromCharCode(65 + target.row)}${target.col + 1}`);
+    ws.publish(`/app/game/${gameId}/attack`, {
+      row: target.row,
+      col: target.col,
+    });
+    addLog(
+      `⏱ TEMPO ESGOTADO — Tiro automático em ${String.fromCharCode(65 + target.row)}${target.col + 1}`,
+    );
   }
 
   function connectWs() {
@@ -330,8 +378,9 @@ export default function Game() {
           setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
-          // Aguarda 800ms para o fetch do perfil do oponente completar antes de exibir o intro
-          setTimeout(() => setShowBattleIntro(true), 800);
+          // loadGameState buscará o perfil do oponente e exibirá o intro quando pronto.
+          // Se o perfil já estiver carregado, exibe direto; senão marca como pendente.
+          pendingBattleIntroRef.current = true;
           loadGameState();
           break;
         case "GAME_OVER":
@@ -466,7 +515,9 @@ export default function Game() {
           );
         }
         if (status === "SUNK") {
-          const typeName = shipType ? SHIP_TYPE_NAMES[shipType] || shipType : "EMBARCAÇÃO";
+          const typeName = shipType
+            ? SHIP_TYPE_NAMES[shipType] || shipType
+            : "EMBARCAÇÃO";
           addLog(`🔥 ${typeName} DESTRUÍDO!`);
         }
         // Sound + animation
@@ -543,10 +594,13 @@ export default function Game() {
         setSelectedShipSync(null);
       }
       setError("");
-      api.getBoard(gameId, user.id).then(({ grid, shipTypes }) => {
-        setMyGrid(grid);
-        setMyShipTypes(shipTypes);
-      }).catch(console.error);
+      api
+        .getBoard(gameId, user.id)
+        .then(({ grid, shipTypes }) => {
+          setMyGrid(grid);
+          setMyShipTypes(shipTypes);
+        })
+        .catch(console.error);
       addLog(`Embarcação posicionada (${placedShipsRef.current.length}/5)`);
     } else if (status === "INVALID") {
       setError(
@@ -1057,14 +1111,22 @@ function PlayingPhase({
               {isMyTurn ? "SUA VEZ" : "VEZ DO INIMIGO"}
             </span>
             {isMyTurn && (
-              <div className={`flex items-center justify-center w-10 h-10 border-2 ${turnTimer <= 5 ? "border-error text-error" : "border-primary text-primary"}`}>
-                <span className="text-lg font-bold" style={{ fontFamily: "var(--font-mono)" }}>
+              <div
+                className={`flex items-center justify-center w-10 h-10 border-2 ${turnTimer <= 5 ? "border-error text-error" : "border-primary text-primary"}`}
+              >
+                <span
+                  className="text-lg font-bold"
+                  style={{ fontFamily: "var(--font-mono)" }}
+                >
                   {turnTimer}
                 </span>
               </div>
             )}
             {isMyTurn && turnTimer <= 5 && (
-              <span className="text-[10px] text-error uppercase animate-pulse" style={{ fontFamily: "var(--font-mono)" }}>
+              <span
+                className="text-[10px] text-error uppercase animate-pulse"
+                style={{ fontFamily: "var(--font-mono)" }}
+              >
                 TIRO AUTOMÁTICO IMINENTE
               </span>
             )}
