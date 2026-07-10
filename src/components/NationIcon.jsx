@@ -14,11 +14,18 @@ export default function NationIcon({ nation, className = "", size = 32, variant 
   const src = NATION_ICONS[nation];
   if (!src) return null;
 
-  const filterStyle = variant === "dark"
-    ? { filter: "brightness(0) saturate(100%)" }
-    : variant === "light"
-      ? { filter: "brightness(1.3) saturate(0.8)" }
-      : {};
+  // Ícones multi-camada (Alemanha e Itália) precisam de filtro diferente
+  // para manter contraste entre as camadas
+  const multiLayer = nation === "GERMANY" || nation === "ITALY";
+
+  let filterStyle = {};
+  if (variant === "dark") {
+    filterStyle = multiLayer
+      ? { filter: "brightness(0.2) contrast(1.5)" }
+      : { filter: "brightness(0) saturate(100%)" };
+  } else if (variant === "light") {
+    filterStyle = { filter: "brightness(1.3) saturate(0.8)" };
+  }
 
   return (
     <img
