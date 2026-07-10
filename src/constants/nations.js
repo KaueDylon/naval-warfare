@@ -48,6 +48,14 @@ export const NATION_PORTRAITS = {
   ITALY: ["ITALY_GENERAL", "ITALY_ADMIRAL", "ITALY_PILOT"],
 };
 
+/**
+ * Mapeamento de portrait ID → caminho da imagem.
+ * Portraits sem imagem retornam null (usa placeholder).
+ */
+export const PORTRAIT_IMAGES = {
+  ITALY_ADMIRAL: "/italia-admiral.png",
+};
+
 export const NATIONS = [
   {
     id: "USA",

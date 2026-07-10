@@ -12,6 +12,7 @@ import BottomNav from "../components/BottomNav";
 import SectionCard from "../components/SectionCard";
 import TopSecretStamp from "../components/TopSecretStamp";
 import NationIcon from "../components/NationIcon";
+import PortraitImage from "../components/PortraitImage";
 import {
   NATIONS,
   NATION_LABELS,
@@ -148,10 +149,8 @@ export default function Profile() {
           <div className="space-y-4">
             {/* Vintage Frame Portrait */}
             <div className="relative border-4 border-surface-container-highest outline outline-2 outline-secondary/60 p-3 bg-surface-container flex flex-col items-center">
-              <div className="w-full aspect-[3/4] bg-surface-container-high border border-outline-variant flex items-center justify-center grayscale relative overflow-hidden">
-                <span className="material-symbols-outlined text-7xl text-on-surface-variant/40">
-                  person
-                </span>
+              <div className="relative">
+                <PortraitImage portrait={selectedPortrait} size="lg" className="grayscale" />
                 <TopSecretStamp variant="mini" />
               </div>
               <p
@@ -330,11 +329,7 @@ export default function Profile() {
                       check_circle
                     </span>
                   )}
-                  <div className="w-16 h-20 bg-surface-container-high border border-outline-variant flex items-center justify-center grayscale">
-                    <span className="material-symbols-outlined text-3xl text-on-surface-variant">
-                      person
-                    </span>
-                  </div>
+                  <PortraitImage portrait={portrait} size="md" className="grayscale" />
                   <span
                     className="text-[0.6rem] text-on-surface-variant uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-mono)" }}
