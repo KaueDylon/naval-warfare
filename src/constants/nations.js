@@ -22,21 +22,21 @@ export const NATION_FLAGS = {
 };
 
 export const NATION_ICONS = {
-  USA: "/US-Army-Star.svg",
-  UK: "/gov-uk.svg",
-  USSR: "/Soviet_Hammer_and_Sickle__1923-1924__gold__svg.svg",
-  GERMANY: "/Balkenkreuz_svg.svg",
-  JAPAN: "/sol-nascente-japones.svg",
-  ITALY: "/italia.svg",
+  USA: "/icons/nations/usa.svg",
+  UK: "/icons/nations/uk.svg",
+  USSR: "/icons/nations/ussr.svg",
+  GERMANY: "/icons/nations/germany.svg",
+  JAPAN: "/icons/nations/japan.svg",
+  ITALY: "/icons/nations/italy.svg",
 };
 
 export const NATION_ICONS_DARK = {
-  USA: "/US-Army-Star.svg",
-  UK: "/gov-uk.svg",
-  USSR: "/Soviet_Hammer_and_Sickle__1923-1924__gold__svg.svg",
-  GERMANY: "/Balkenkreuz_dark.svg",
-  JAPAN: "/sol-nascente-japones.svg",
-  ITALY: "/italia_dark.svg",
+  USA: "/icons/nations/usa.svg",
+  UK: "/icons/nations/uk.svg",
+  USSR: "/icons/nations/ussr.svg",
+  GERMANY: "/icons/nations/germany-dark.svg",
+  JAPAN: "/icons/nations/japan.svg",
+  ITALY: "/icons/nations/italy-dark.svg",
 };
 
 export const NATION_PORTRAITS = {
@@ -53,7 +53,9 @@ export const NATION_PORTRAITS = {
  * Portraits sem imagem retornam null (usa placeholder).
  */
 export const PORTRAIT_IMAGES = {
-  ITALY_ADMIRAL: "/italia-admiral.png",
+  ITALY_ADMIRAL: "/portraits/italy-admiral.webp",
+  ITALY_PILOT: "/portraits/italy-pilot.webp",
+  ITALY_GENERAL: "/portraits/italy-general.webp",
 };
 
 export const NATIONS = [

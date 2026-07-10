@@ -3,11 +3,12 @@ import { PORTRAIT_IMAGES } from "../constants/nations";
 /**
  * Renderiza a imagem do portrait do jogador.
  * Se o portrait não tem imagem mapeada, exibe um placeholder.
+ * A caixa mantém o tamanho fixo mesmo sem imagem.
  *
  * @param {string} portrait - ID do portrait (ex: "ITALY_ADMIRAL")
  * @param {"sm"|"md"|"lg"} size - Tamanho responsivo:
- *   - "sm": 48x60 (grid de seleção)
- *   - "md": 64x80 (lista, cards)
+ *   - "sm": 48x64 (grid de seleção)
+ *   - "md": 64x84 (lista, cards)
  *   - "lg": 100% width, aspect 3/4 (frame principal do perfil)
  * @param {string} className - Classes CSS adicionais
  */
@@ -15,8 +16,8 @@ export default function PortraitImage({ portrait, size = "md", className = "" })
   const src = portrait ? PORTRAIT_IMAGES[portrait.toUpperCase()] : null;
 
   const sizeClasses = {
-    sm: "w-12 h-15",
-    md: "w-16 h-20",
+    sm: "w-12 min-h-16",
+    md: "w-16 min-h-20",
     lg: "w-full aspect-[3/4]",
   };
 

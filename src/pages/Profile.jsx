@@ -149,7 +149,7 @@ export default function Profile() {
           <div className="space-y-4">
             {/* Vintage Frame Portrait */}
             <div className="relative border-4 border-surface-container-highest outline outline-2 outline-secondary/60 p-3 bg-surface-container flex flex-col items-center">
-              <div className="relative">
+              <div className="relative w-full">
                 <PortraitImage portrait={selectedPortrait} size="lg" className="grayscale" />
                 <TopSecretStamp variant="mini" />
               </div>
