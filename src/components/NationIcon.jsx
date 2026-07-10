@@ -14,14 +14,15 @@ export default function NationIcon({ nation, className = "", size = 32, variant 
   const src = NATION_ICONS[nation];
   if (!src) return null;
 
-  // Ícones multi-camada (Alemanha e Itália) precisam de filtro diferente
-  // para manter contraste entre as camadas
-  const multiLayer = nation === "GERMANY" || nation === "ITALY";
-
   let filterStyle = {};
   if (variant === "dark") {
+    // brightness(0) transforma tudo em preto — funciona porque todos os SVGs
+    // agora usam tons claros (#c4caa7, #7a7f62, #545a3e) que viram preto uniforme.
+    // Para manter contornos visíveis em ícones multi-camada, usamos brightness baixo
+    // em vez de zero, preservando diferença relativa entre as camadas.
+    const multiLayer = nation === "GERMANY" || nation === "ITALY";
     filterStyle = multiLayer
-      ? { filter: "brightness(0.2) contrast(1.5)" }
+      ? { filter: "brightness(0.15)" }
       : { filter: "brightness(0) saturate(100%)" };
   } else if (variant === "light") {
     filterStyle = { filter: "brightness(1.3) saturate(0.8)" };
