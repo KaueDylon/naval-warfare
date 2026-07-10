@@ -1,3 +1,50 @@
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { getShipSprite } from "../constants/ships";
+
+/**
+ * Detecta grupos de navio no grid baseado no shipTypes Map.
+ */
+function detectShipGroups(grid, shipTypes) {
+  if (!shipTypes || shipTypes.size === 0) return [];
+
+  const visited = new Set();
+  const groups = [];
+
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      const key = `${r}-${c}`;
+      if (visited.has(key)) continue;
+      const type = shipTypes.get(key);
+      if (!type) continue;
+
+      const cells = [];
+      const stack = [[r, c]];
+      while (stack.length) {
+        const [sr, sc] = stack.pop();
+        const sk = `${sr}-${sc}`;
+        if (visited.has(sk)) continue;
+        if (shipTypes.get(sk) !== type) continue;
+        const val = grid?.[sr]?.[sc] ?? 0;
+        if (val !== 1 && val !== 3) continue;
+        visited.add(sk);
+        cells.push({ row: sr, col: sc });
+        [[sr - 1, sc], [sr + 1, sc], [sr, sc - 1], [sr, sc + 1]].forEach(
+          ([nr, nc]) => {
+            if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10) stack.push([nr, nc]);
+          }
+        );
+      }
+
+      if (cells.length === 0) continue;
+      cells.sort((a, b) => a.row - b.row || a.col - b.col);
+      const horizontal = cells.every((c) => c.row === cells[0].row);
+      groups.push({ type, cells, horizontal });
+    }
+  }
+
+  return groups;
+}
+
 export default function Board({
   grid,
   onCellClick,
@@ -8,11 +55,71 @@ export default function Board({
   title,
   ghostShip = null,
   hoveredCell = null,
-  sunkCells = new Set(), // Set de "row-col" — células de navios afundados
-  animatedCell = null, // {row, col, type} — célula com animação ativa
+  sunkCells = new Set(),
+  animatedCell = null,
+  shipTypes = null,
+  nation = null,
 }) {
   const rows = 'ABCDEFGHIJ'.split('');
   const cols = Array.from({ length: 10 }, (_, i) => i + 1);
+  const boardRef = useRef(null);
+  const cellRefs = useRef({}); // "row-col" → DOM element
+  const [cellMetrics, setCellMetrics] = useState(null); // { offsetX, offsetY, cellW, cellH }
+
+  const shipGroups = useMemo(() => {
+    if (!shipTypes || !nation) return [];
+    return detectShipGroups(grid, shipTypes);
+  }, [grid, shipTypes, nation]);
+
+  const visibleGroups = useMemo(() => {
+    return shipGroups.filter((group) => {
+      if (!isOpponent) return true;
+      return group.cells.every((c) => sunkCells.has(`${c.row}-${c.col}`));
+    });
+  }, [shipGroups, isOpponent, sunkCells]);
+
+  const spriteCells = useMemo(() => {
+    const set = new Set();
+    visibleGroups.forEach((group) => {
+      const sprite = getShipSprite(nation, group.type, group.horizontal);
+      if (sprite) {
+        group.cells.forEach((c) => set.add(`${c.row}-${c.col}`));
+      }
+    });
+    return set;
+  }, [visibleGroups, nation]);
+
+  // Measure cell positions after render/resize
+  const measureCells = useCallback(() => {
+    if (!boardRef.current) return;
+    const firstCell = cellRefs.current["0-0"];
+    const lastCell = cellRefs.current["9-9"];
+    if (!firstCell || !lastCell) return;
+
+    const boardRect = boardRef.current.getBoundingClientRect();
+    const firstRect = firstCell.getBoundingClientRect();
+    const lastRect = lastCell.getBoundingClientRect();
+
+    const offsetX = firstRect.left - boardRect.left;
+    const offsetY = firstRect.top - boardRect.top;
+    const cellW = (lastRect.right - firstRect.left) / 10;
+    const cellH = (lastRect.bottom - firstRect.top) / 10;
+
+    setCellMetrics({ offsetX, offsetY, cellW, cellH });
+  }, []);
+
+  useEffect(() => {
+    measureCells();
+    window.addEventListener("resize", measureCells);
+    return () => window.removeEventListener("resize", measureCells);
+  }, [measureCells]);
+
+  // Re-measure when grid changes (ships placed)
+  useEffect(() => {
+    // Small delay to let grid re-render
+    const timer = setTimeout(measureCells, 50);
+    return () => clearTimeout(timer);
+  }, [grid, shipTypes, measureCells]);
 
   function getGhostCells() {
     if (!ghostShip || !hoveredCell || isOpponent) return new Set();
@@ -68,6 +175,7 @@ export default function Board({
       };
     }
     if (value === 3) return { backgroundColor: 'rgba(255,180,171,0.08)', position: 'relative' };
+    if (value === 1 && !isOpponent && spriteCells.has(key)) return { position: 'relative' };
     if (value === 1 && !isOpponent) return { backgroundColor: 'rgba(196,202,167,0.15)' };
     return {};
   }
@@ -75,7 +183,6 @@ export default function Board({
   function getCellContent(value, rowIdx, colIdx) {
     const key = `${rowIdx}-${colIdx}`;
 
-    // Célula de navio afundado — manter estilo visual de sunk (sem sprite)
     if (sunkCells.has(key)) {
       return (
         <div
@@ -109,7 +216,7 @@ export default function Board({
         />
       );
     }
-    if (value === 1 && !isOpponent) {
+    if (value === 1 && !isOpponent && !spriteCells.has(key)) {
       return <div className="w-full h-full bg-primary/20" />;
     }
     return null;
@@ -119,6 +226,10 @@ export default function Board({
     if (onCellHover) onCellHover(null, null);
     if (onMouseLeave) onMouseLeave();
   }
+
+  const setCellRef = useCallback((el, row, col) => {
+    if (el) cellRefs.current[`${row}-${col}`] = el;
+  }, []);
 
   return (
     <div className="flex flex-col">
@@ -133,6 +244,7 @@ export default function Board({
         </div>
       )}
       <div
+        ref={boardRef}
         className="aspect-square bg-surface-container border-2 border-outline relative p-2 shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]"
         onMouseLeave={handleBoardMouseLeave}
       >
@@ -145,8 +257,8 @@ export default function Board({
             gridTemplateRows: 'auto repeat(10, 1fr)',
           }}
         >
+          {/* Column headers */}
           <div />
-
           {cols.map((col) => (
             <div
               key={`col-${col}`}
@@ -157,6 +269,7 @@ export default function Board({
             </div>
           ))}
 
+          {/* Grid cells */}
           {rows.map((row, rowIdx) => (
             <div key={`row-${row}`} className="contents">
               <div
@@ -178,6 +291,7 @@ export default function Board({
                 return (
                   <div
                     key={`${row}${col}`}
+                    ref={(el) => setCellRef(el, rowIdx, colIdx)}
                     className={`border flex items-center justify-center relative ${
                       isOpponent ? 'border-secondary/20' : 'border-outline/10'
                     } ${interactive ? 'cursor-crosshair' : ''} ${animClass}`}
@@ -196,6 +310,55 @@ export default function Board({
             </div>
           ))}
         </div>
+
+        {/* Ship sprite overlay — absolutely positioned, does NOT affect grid */}
+        {cellMetrics && visibleGroups.map((group) => {
+          const sprite = getShipSprite(nation, group.type, group.horizontal);
+          if (!sprite) return null;
+
+          const origin = group.cells[0];
+          const size = group.cells.length;
+          const isSunk = isOpponent && group.cells.every((c) => sunkCells.has(`${c.row}-${c.col}`));
+
+          const { offsetX, offsetY, cellW, cellH } = cellMetrics;
+
+          const x = offsetX + origin.col * cellW;
+          const y = offsetY + origin.row * cellH;
+          const w = group.horizontal ? cellW * size : cellW;
+          const h = group.horizontal ? cellH : cellH * size;
+
+          // Não renderizar no board inimigo se não está sunk
+          if (isOpponent && !isSunk) return null;
+
+          return (
+            <div
+              key={`ship-${group.type}-${origin.row}-${origin.col}`}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${x}px`,
+                top: `${y}px`,
+                width: `${w}px`,
+                height: `${h}px`,
+                zIndex: 2,
+              }}
+            >
+              <img
+                src={sprite}
+                alt=""
+                className="select-none"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  opacity: isSunk ? 0.7 : 0.85,
+                  filter: isSunk
+                    ? 'sepia(0.3) brightness(0.7) saturate(0.8)'
+                    : 'none',
+                }}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
   );

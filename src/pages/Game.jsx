@@ -33,6 +33,7 @@ export default function Game() {
   const [myShipTypes, setMyShipTypes] = useState(new Map());
   const [currentTurn, setCurrentTurn] = useState(null);
   const [opponentId, setOpponentId] = useState(null);
+  const [opponentNation, setOpponentNation] = useState(null);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -234,6 +235,14 @@ export default function Game() {
       connectedRef.current = false;
     };
   }, [gameId]);
+
+  // Buscar nação do oponente para exibir sprites corretos
+  useEffect(() => {
+    if (!opponentId) return;
+    api.getPlayer(opponentId)
+      .then((data) => { if (data?.nation) setOpponentNation(data.nation); })
+      .catch(() => {}); // silencioso — sprite simplesmente não aparece
+  }, [opponentId]);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -718,6 +727,8 @@ export default function Game() {
             onReady={handleReady}
             myReady={myReady}
             opponentReady={opponentReady}
+            myShipTypes={myShipTypes}
+            myNation={user?.nation}
           />
         )}
         {phase === "PLAYING" && (
@@ -733,6 +744,10 @@ export default function Game() {
             sunkEnemyCells={sunkEnemyCells}
             turnTimer={turnTimer}
             animatedCell={animatedCell}
+            myShipTypes={myShipTypes}
+            enemyShipTypes={enemyShipTypes}
+            myNation={user?.nation}
+            opponentNation={opponentNation}
           />
         )}
         {phase === "FINISHED" && (
@@ -790,6 +805,8 @@ function SetupPhase({
   onReady,
   myReady,
   opponentReady,
+  myShipTypes,
+  myNation,
 }) {
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
@@ -840,6 +857,8 @@ function SetupPhase({
                   : null
               }
               hoveredCell={hoveredCell}
+              shipTypes={myShipTypes}
+              nation={myNation}
             />
           </div>
         </div>
@@ -1018,6 +1037,10 @@ function PlayingPhase({
   sunkEnemyCells,
   turnTimer,
   animatedCell,
+  myShipTypes,
+  enemyShipTypes,
+  myNation,
+  opponentNation,
 }) {
   const logEndRef = useRef(null);
 
@@ -1156,6 +1179,8 @@ function PlayingPhase({
             title="SUA FROTA"
             sunkCells={sunkMyCells}
             animatedCell={animatedCell?.board === "my" ? animatedCell : null}
+            shipTypes={myShipTypes}
+            nation={myNation}
           />
         </div>
 
@@ -1187,6 +1212,8 @@ function PlayingPhase({
             title="ÁGUAS INIMIGAS"
             sunkCells={sunkEnemyCells}
             animatedCell={animatedCell?.board === "enemy" ? animatedCell : null}
+            shipTypes={enemyShipTypes}
+            nation={opponentNation}
           />
         </div>
       </div>
