@@ -141,7 +141,7 @@ export default function Ranking() {
                       {player.name}
                     </span>
                     <span className="text-primary text-xs shrink-0 hidden sm:flex sm:items-center">
-                      {player.nation ? <NationIcon nation={player.nation} size={18} /> : "—"}
+                      {player.nation ? <NationIcon nation={player.nation} size={18} variant="light" /> : "—"}
                     </span>
                     <span className="text-secondary text-sm text-center shrink-0 hidden sm:block">
                       {player.wins ?? 0}

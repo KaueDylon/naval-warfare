@@ -5,10 +5,20 @@ import { NATION_ICONS } from "../constants/nations";
  * @param {string} nation - Código da nação (USA, UK, USSR, GERMANY, JAPAN, ITALY)
  * @param {string} className - Classes CSS adicionais
  * @param {number|string} size - Tamanho em px (padrão: 32)
+ * @param {"light"|"dark"|"default"} variant - Variante de cor:
+ *   - "default": cor original do SVG (para fundos escuros)
+ *   - "dark": escurece para uso em fundos claros
+ *   - "light": clareia para melhor visibilidade em fundos escuros
  */
-export default function NationIcon({ nation, className = "", size = 32 }) {
+export default function NationIcon({ nation, className = "", size = 32, variant = "default" }) {
   const src = NATION_ICONS[nation];
   if (!src) return null;
+
+  const filterStyle = variant === "dark"
+    ? { filter: "brightness(0) saturate(100%)" }
+    : variant === "light"
+      ? { filter: "brightness(1.3) saturate(0.8)" }
+      : {};
 
   return (
     <img
@@ -17,7 +27,7 @@ export default function NationIcon({ nation, className = "", size = 32 }) {
       width={size}
       height={size}
       className={`object-contain ${className}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, ...filterStyle }}
     />
   );
 }
