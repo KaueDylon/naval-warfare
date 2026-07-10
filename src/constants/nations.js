@@ -30,6 +30,15 @@ export const NATION_ICONS = {
   ITALY: "/italia.svg",
 };
 
+export const NATION_ICONS_DARK = {
+  USA: "/US-Army-Star.svg",
+  UK: "/gov-uk.svg",
+  USSR: "/Soviet_Hammer_and_Sickle__1923-1924__gold__svg.svg",
+  GERMANY: "/Balkenkreuz_dark.svg",
+  JAPAN: "/sol-nascente-japones.svg",
+  ITALY: "/italia_dark.svg",
+};
+
 export const NATION_PORTRAITS = {
   USA: ["USA_GENERAL", "USA_ADMIRAL", "USA_PILOT"],
   UK: ["UK_GENERAL", "UK_ADMIRAL", "UK_PILOT"],

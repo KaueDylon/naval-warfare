@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 500 500">
+  <!-- Cruz principal - preto -->
+  <path fill="#171305" d="M133 0h234v133h133v234H367v133H133V367H0V133h133z"/>
+  <!-- Contornos - cinza médio para contraste com a cruz -->
+  <path fill="#4a4535" d="M321 321h179v46H367v133h-46zM0 321h179v179h-46V367H0zM321 0h46v133h133v46H321zM133 0h46v179H0v-46h133z"/>
+  <!-- Linha fina exterior - cinza mais claro -->
+  <path fill="#6b6450" d="M358 358h142v9H367v133h-9zM0 358h142v142h-9V367H0zM358 0h9v133h133v9H358zM133 0h9v142H0v-9h133z"/>
+</svg>
