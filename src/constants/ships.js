@@ -11,14 +11,26 @@
  */
 export const SHIP_SPRITES = {
   USA: {
+    CARRIER: {
+      h: "/ships/usa/porta-aviao-eua-horizontal.png",
+      v: "/ships/usa/porta-aviao-eua-vertical.png",
+    },
     BATTLESHIP: {
       h: "/ships/usa/encouracado-eua-horizontal.png",
       v: "/ships/usa/encouracado-eua-vertical.png",
     },
-    // CARRIER: { h: "/ships/usa/carrier-h.png", v: "/ships/usa/carrier-v.png" },
-    // CRUISER: { h: "/ships/usa/cruiser-h.png", v: "/ships/usa/cruiser-v.png" },
-    // SUBMARINE: { h: "/ships/usa/submarine-h.png", v: "/ships/usa/submarine-v.png" },
-    // DESTROYER: { h: "/ships/usa/destroyer-h.png", v: "/ships/usa/destroyer-v.png" },
+    CRUISER: {
+      h: "/ships/usa/cruzador-eua-horizontal.png",
+      v: "/ships/usa/cruzador-eua-vertical.png",
+    },
+    SUBMARINE: {
+      h: "/ships/usa/submarino-eua-horizontal.png",
+      v: "/ships/usa/submarino-eua-vertical.png",
+    },
+    DESTROYER: {
+      h: "/ships/usa/destroyer-eua-horizontal.png",
+      v: "/ships/usa/destroyer-eua-vertical.png",
+    },
   },
   // UK: {},
   // USSR: {},

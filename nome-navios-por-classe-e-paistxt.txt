@@ -3,3 +3,33 @@ EUA: Encouracado- IOWA
 	 Cruzador- INDIANAPOLIS
 	 Destroyer- LAFFEY
 	 Submarino- WAHOO
+	 
+URSS: Encouracado- 
+	  Porta-Aviao- 
+	  Cruzador- 
+	  Destroyer- 
+	  Submarino- 
+
+ITALIA: Encouracado- 
+	    Porta-Aviao- 
+	    Cruzador- 
+	    Destroyer- 
+	    Submarino- 
+
+ALEMANHA:  Encouracado- 
+	       Porta-Aviao- 
+	       Cruzador- 
+	       Destroyer- 
+	       Submarino- 
+
+JAPAO:  Encouracado- 
+	    Porta-Aviao- 
+	    Cruzador- 
+	    Destroyer- 
+	    Submarino- 
+
+REINO UNIDO: Encouracado- 
+	         Porta-Aviao- 
+	         Cruzador- 
+	         Destroyer- 
+	         Submarino- 
