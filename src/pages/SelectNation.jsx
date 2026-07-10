@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import * as api from "../services/api";
 import AlertBanner from "../components/AlertBanner";
 import TopSecretStamp from "../components/TopSecretStamp";
+import NationIcon from "../components/NationIcon";
 import { NATIONS } from "../constants/nations";
 
 export default function SelectNation() {
@@ -77,7 +78,7 @@ export default function SelectNation() {
                     check_circle
                   </span>
                 )}
-                <span className="text-2xl mb-1">{nation.flag}</span>
+                <span className="text-2xl mb-1"><NationIcon nation={nation.id} size={36} /></span>
                 <span
                   className="text-[10px] font-bold uppercase tracking-wider leading-tight"
                   style={{ fontFamily: "var(--font-headline)" }}
@@ -98,7 +99,7 @@ export default function SelectNation() {
           <div className="flex items-center justify-between border-t-2 border-[#171305]/20 pt-4">
             {selectedNation ? (
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{selectedNation.flag}</span>
+                <NationIcon nation={selectedNation.id} size={40} />
                 <div>
                   <p
                     className="text-sm font-bold uppercase tracking-wider"

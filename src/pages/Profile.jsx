@@ -11,9 +11,9 @@ import AlertBanner from "../components/AlertBanner";
 import BottomNav from "../components/BottomNav";
 import SectionCard from "../components/SectionCard";
 import TopSecretStamp from "../components/TopSecretStamp";
+import NationIcon from "../components/NationIcon";
 import {
   NATIONS,
-  NATION_FLAGS,
   NATION_LABELS,
   NATION_PORTRAITS,
 } from "../constants/nations";
@@ -220,11 +220,12 @@ export default function Profile() {
                   SETOR OPERACIONAL
                 </p>
                 <p
-                  className="text-sm font-bold text-on-surface"
+                  className="text-sm font-bold text-on-surface flex items-center gap-2"
                   style={{ fontFamily: "var(--font-mono)" }}
                 >
+                  {selectedNation && <NationIcon nation={selectedNation} size={20} />}
                   {selectedNation
-                    ? `${NATION_FLAGS[selectedNation] || ""} ${NATION_LABELS[selectedNation] || selectedNation}`
+                    ? `${NATION_LABELS[selectedNation] || selectedNation}`
                     : "NÃO DESIGNADO"}
                 </p>
               </div>

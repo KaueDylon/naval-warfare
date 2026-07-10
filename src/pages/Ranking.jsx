@@ -3,7 +3,8 @@ import * as api from "../services/api";
 import PageHeader, { BackToHQButton } from "../components/PageHeader";
 import LoadingState from "../components/LoadingState";
 import EmptyState from "../components/EmptyState";
-import { NATION_FLAGS, NATION_LABELS } from "../constants/nations";
+import NationIcon from "../components/NationIcon";
+import { NATION_LABELS } from "../constants/nations";
 
 export default function Ranking() {
   const [rankings, setRankings] = useState([]);
@@ -139,8 +140,8 @@ export default function Ranking() {
                     <span className="text-on-surface text-sm truncate flex-1">
                       {player.name}
                     </span>
-                    <span className="text-primary text-xs shrink-0 hidden sm:block">
-                      {player.nation ? `${NATION_FLAGS[player.nation]}` : "—"}
+                    <span className="text-primary text-xs shrink-0 hidden sm:flex sm:items-center">
+                      {player.nation ? <NationIcon nation={player.nation} size={18} /> : "—"}
                     </span>
                     <span className="text-secondary text-sm text-center shrink-0 hidden sm:block">
                       {player.wins ?? 0}
