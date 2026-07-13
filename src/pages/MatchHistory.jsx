@@ -1,40 +1,42 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import * as api from '../services/api';
-import PageHeader, { BackToHQButton } from '../components/PageHeader';
-import LoadingState from '../components/LoadingState';
-import EmptyState from '../components/EmptyState';
+import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import * as api from "../services/api";
+import PageHeader, { BackToHQButton } from "../components/PageHeader";
+import LoadingState from "../components/LoadingState";
+import EmptyState from "../components/EmptyState";
 
 export default function MatchHistory() {
   const { user } = useAuth();
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const limit = 8;
 
   useEffect(() => {
     loadMatches();
-  }, []);
+  }, [offset]);
 
   async function loadMatches() {
     setLoading(true);
     try {
-      const data = await api.getMatches();
+      const data = await api.getMatches(limit, offset);
       setMatches(data || []);
     } catch (err) {
-      console.error('Falha ao carregar partidas:', err);
+      console.error("Falha ao carregar partidas:", err);
     } finally {
       setLoading(false);
     }
   }
 
   function formatDate(dateStr) {
-    if (!dateStr) return '—';
+    if (!dateStr) return "—";
     const date = new Date(dateStr);
-    return date.toLocaleDateString('pt-BR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return date.toLocaleDateString("pt-BR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 
@@ -53,11 +55,17 @@ export default function MatchHistory() {
           {/* Cabeçalho da Tabela */}
           <div
             className="hidden sm:grid grid-cols-[70px_1fr_130px] gap-4 px-4 py-3 border-b-2 border-outline-variant bg-surface-container-high"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            style={{ fontFamily: "var(--font-mono)" }}
           >
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Resultado</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Detalhes da Operação</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">Data</span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+              Resultado
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">
+              Detalhes da Operação
+            </span>
+            <span className="text-[10px] text-on-surface-variant uppercase tracking-widest text-right">
+              Data
+            </span>
           </div>
 
           {loading ? (
@@ -81,34 +89,43 @@ export default function MatchHistory() {
                     <div
                       className={`text-center py-1.5 border-2 shrink-0 w-16 sm:w-auto ${
                         victory
-                          ? 'border-secondary text-secondary bg-secondary/10'
-                          : 'border-error text-error bg-error/10'
+                          ? "border-secondary text-secondary bg-secondary/10"
+                          : "border-error text-error bg-error/10"
                       }`}
                     >
                       <span
                         className="text-[10px] font-bold uppercase tracking-widest"
-                        style={{ fontFamily: 'var(--font-headline)' }}
+                        style={{ fontFamily: "var(--font-headline)" }}
                       >
-                        {victory ? 'VITÓRIA' : 'DERROTA'}
+                        {victory ? "VITÓRIA" : "DERROTA"}
                       </span>
                     </div>
 
                     {/* Detalhes */}
-                    <div style={{ fontFamily: 'var(--font-mono)' }} className="flex-1 min-w-0">
+                    <div
+                      style={{ fontFamily: "var(--font-mono)" }}
+                      className="flex-1 min-w-0"
+                    >
                       <p className="text-on-surface text-sm flex items-center gap-2 truncate">
                         <span className="material-symbols-outlined text-sm text-outline shrink-0">
-                          {victory ? 'emoji_events' : 'dangerous'}
+                          {victory ? "emoji_events" : "dangerous"}
                         </span>
-                        Missão #{(match.matchId || '').slice(0, 8)}
+                        Missão #{(match.matchId || "").slice(0, 8)}
                       </p>
                       <p className="text-on-surface-variant text-xs mt-0.5 truncate">
-                        vs. {victory ? (match.loserId || '').slice(0, 8) : (match.winnerId || '').slice(0, 8)}
+                        vs.{" "}
+                        {victory
+                          ? (match.loserId || "").slice(0, 8)
+                          : (match.winnerId || "").slice(0, 8)}
                       </p>
                     </div>
 
                     {/* Data */}
                     <div className="text-right shrink-0">
-                      <p className="text-on-surface-variant text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
+                      <p
+                        className="text-on-surface-variant text-xs"
+                        style={{ fontFamily: "var(--font-mono)" }}
+                      >
                         {formatDate(match.playedAt)}
                       </p>
                     </div>
@@ -117,6 +134,32 @@ export default function MatchHistory() {
               })}
             </div>
           )}
+
+          {/* Paginação */}
+          <div className="border-t-2 border-outline-variant px-4 py-3 flex items-center justify-between bg-surface-container-high">
+            <button
+              onClick={() => setOffset(Math.max(0, offset - limit))}
+              disabled={offset === 0}
+              className="btn-secondary text-xs px-3 py-1 disabled:opacity-30"
+            >
+              ← ANTERIOR
+            </button>
+            <span
+              className="text-xs text-on-surface-variant"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              {matches.length > 0
+                ? `${offset + 1}—${offset + matches.length}`
+                : "0"}
+            </span>
+            <button
+              onClick={() => setOffset(offset + limit)}
+              disabled={matches.length < limit}
+              className="btn-secondary text-xs px-3 py-1 disabled:opacity-30"
+            >
+              PRÓXIMO →
+            </button>
+          </div>
         </div>
       </main>
     </div>

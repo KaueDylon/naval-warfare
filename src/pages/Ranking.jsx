@@ -11,7 +11,7 @@ export default function Ranking() {
   const [myRanking, setMyRanking] = useState(null);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(true);
-  const limit = 20;
+  const limit = 8;
 
   useEffect(() => {
     loadRankings();
@@ -141,7 +141,15 @@ export default function Ranking() {
                       {player.name}
                     </span>
                     <span className="text-primary text-xs shrink-0 hidden sm:flex sm:items-center">
-                      {player.nation ? <NationIcon nation={player.nation} size={18} variant="light" /> : "—"}
+                      {player.nation ? (
+                        <NationIcon
+                          nation={player.nation}
+                          size={18}
+                          variant="light"
+                        />
+                      ) : (
+                        "—"
+                      )}
                     </span>
                     <span className="text-secondary text-sm text-center shrink-0 hidden sm:block">
                       {player.wins ?? 0}

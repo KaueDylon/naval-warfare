@@ -185,6 +185,6 @@ export function getMyRanking() {
 }
 
 // Match History
-export function getMatches() {
-  return request("/matches/me");
+export function getMatches(limit = 20, offset = 0) {
+  return request(`/matches/me?limit=${limit}&offset=${offset}`);
 }
