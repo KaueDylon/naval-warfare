@@ -35,6 +35,7 @@ export default function Game() {
   const [currentTurn, setCurrentTurn] = useState(null);
   const [opponentId, setOpponentId] = useState(null);
   const [opponentNation, setOpponentNation] = useState(null);
+  const [opponentName, setOpponentName] = useState(null);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
@@ -77,6 +78,7 @@ export default function Game() {
         try {
           const oppData = await api.getPlayer(oppId);
           if (oppData?.nation) setOpponentNation(oppData.nation);
+          if (oppData?.name) setOpponentName(oppData.name);
         } catch {
           // será tentado novamente em chamadas subsequentes de loadGameState
         }
@@ -363,7 +365,10 @@ export default function Game() {
             if (!opponentId && message.playerId) {
               setOpponentId(message.playerId);
               api.getPlayer(message.playerId)
-                .then((data) => { if (data?.nation) setOpponentNation(data.nation); })
+                .then((data) => {
+                  if (data?.nation) setOpponentNation(data.nation);
+                  if (data?.name) setOpponentName(data.name);
+                })
                 .catch(() => {});
             }
           }
@@ -784,6 +789,8 @@ export default function Game() {
             enemyShipTypes={enemyShipTypes}
             myNation={user?.nation}
             opponentNation={opponentNation}
+            myName={user?.name}
+            opponentName={opponentName}
           />
         )}
         {phase === "FINISHED" && (
@@ -1077,6 +1084,8 @@ function PlayingPhase({
   enemyShipTypes,
   myNation,
   opponentNation,
+  myName,
+  opponentName,
 }) {
   const logEndRef = useRef(null);
 
@@ -1212,7 +1221,7 @@ function PlayingPhase({
             grid={myGrid}
             isOpponent={false}
             disabled={true}
-            title="SUA FROTA"
+            title={myName ? `${myName.toUpperCase()}` : "SUA FROTA"}
             sunkCells={sunkMyCells}
             animatedCell={animatedCell?.board === "my" ? animatedCell : null}
             shipTypes={myShipTypes}
@@ -1245,7 +1254,7 @@ function PlayingPhase({
             }
             isOpponent={true}
             disabled={!isMyTurn}
-            title="ÁGUAS INIMIGAS"
+            title={opponentName ? `${opponentName.toUpperCase()}` : "ÁGUAS INIMIGAS"}
             sunkCells={sunkEnemyCells}
             animatedCell={animatedCell?.board === "enemy" ? animatedCell : null}
             shipTypes={enemyShipTypes}
