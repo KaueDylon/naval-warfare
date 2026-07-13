@@ -34,11 +34,27 @@ export default function Game() {
   const [enemyShipTypes, setEnemyShipTypes] = useState(new Map()); // "row-col" → "CARRIER" etc.
   const [myShipTypes, setMyShipTypes] = useState(new Map());
   const [currentTurn, setCurrentTurn] = useState(null);
-  const [opponentId, setOpponentId] = useState(null);
-  const [opponentNation, setOpponentNation] = useState(null);
-  const [opponentName, setOpponentName] = useState(null);
-  const [opponentPortrait, setOpponentPortrait] = useState(null);
+  const [opponentId, setOpponentId] = useState(() => {
+    return sessionStorage.getItem(`game_${gameId}_oppId`) || null;
+  });
+  const [opponentNation, setOpponentNation] = useState(() => {
+    return sessionStorage.getItem(`game_${gameId}_oppNation`) || null;
+  });
+  const [opponentName, setOpponentName] = useState(() => {
+    return sessionStorage.getItem(`game_${gameId}_oppName`) || null;
+  });
+  const [opponentPortrait, setOpponentPortrait] = useState(() => {
+    return sessionStorage.getItem(`game_${gameId}_oppPortrait`) || null;
+  });
   const [winner, setWinner] = useState(null);
+
+  // Persistir dados do oponente no sessionStorage para sobreviver ao F5
+  useEffect(() => {
+    if (opponentId) sessionStorage.setItem(`game_${gameId}_oppId`, opponentId);
+    if (opponentNation) sessionStorage.setItem(`game_${gameId}_oppNation`, opponentNation);
+    if (opponentName) sessionStorage.setItem(`game_${gameId}_oppName`, opponentName);
+    if (opponentPortrait) sessionStorage.setItem(`game_${gameId}_oppPortrait`, opponentPortrait);
+  }, [opponentId, opponentNation, opponentName, opponentPortrait, gameId]);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
@@ -65,6 +81,57 @@ export default function Game() {
     return Array.from({ length: 10 }, () => Array(10).fill(0));
   }
 
+  /**
+   * Reconstrói o Set de sunkCells a partir de um board e seus shipTypes.
+   * Agrupa células com valor 3 que possuem shipType, verifica se o grupo
+   * tem o tamanho esperado do navio (= navio completamente afundado).
+   */
+  function buildSunkCells(board, shipTypes) {
+    const sunk = new Set();
+    const processed = new Set();
+    for (let r = 0; r < 10; r++) {
+      for (let c = 0; c < 10; c++) {
+        const key = `${r}-${c}`;
+        if (processed.has(key)) continue;
+        if (board[r][c] !== 3) continue;
+        const type = shipTypes.get(key);
+        if (!type) continue;
+
+        const expectedSize = SHIP_SIZES[type] || 1;
+
+        // Tentar horizontal
+        const hCells = [[r, c]];
+        for (let cc = c + 1; cc < 10 && board[r][cc] === 3 && shipTypes.get(`${r}-${cc}`) === type; cc++) {
+          hCells.push([r, cc]);
+        }
+
+        // Tentar vertical
+        const vCells = [[r, c]];
+        for (let rr = r + 1; rr < 10 && board[rr][c] === 3 && shipTypes.get(`${rr}-${c}`) === type; rr++) {
+          vCells.push([rr, c]);
+        }
+
+        let shipCells = null;
+        if (hCells.length === expectedSize) {
+          shipCells = hCells;
+        } else if (vCells.length === expectedSize) {
+          shipCells = vCells;
+        }
+
+        if (shipCells) {
+          shipCells.forEach(([sr, sc]) => {
+            const sk = `${sr}-${sc}`;
+            sunk.add(sk);
+            processed.add(sk);
+          });
+        } else {
+          processed.add(key);
+        }
+      }
+    }
+    return sunk;
+  }
+
   const loadGameState = useCallback(async () => {
     try {
       const state = await api.getGameState(gameId);
@@ -72,19 +139,39 @@ export default function Game() {
       if (state.currentTurn) setCurrentTurn(state.currentTurn);
       if (state.winner) setWinner(state.winner);
 
-      const oppId =
-        state.playerAId === user.id ? state.playerBId : state.playerAId;
+      // Resolver o ID do oponente
+      // O backend pode não retornar playerBId em getGameState.
+      // Usamos múltiplas estratégias para descobrir quem é o oponente.
+      let oppId = null;
+      if (state.playerAId && state.playerBId) {
+        // Caso ideal: ambos IDs disponíveis
+        oppId = state.playerAId === user.id ? state.playerBId : state.playerAId;
+      } else if (state.playerAId && state.playerAId !== user.id) {
+        oppId = state.playerAId;
+      } else if (state.playerBId && state.playerBId !== user.id) {
+        oppId = state.playerBId;
+      }
+      // Fallback: usar currentTurn se não é meu ID
+      if (!oppId && state.currentTurn && state.currentTurn !== user.id) {
+        oppId = state.currentTurn;
+      }
+      // Fallback final: sessionStorage (salvo de antes do F5)
+      if (!oppId) {
+        oppId = sessionStorage.getItem(`game_${gameId}_oppId`) || null;
+      }
       setOpponentId(oppId || null);
 
-      // Buscar perfil do oponente (nação) assim que temos o ID
-      if (oppId) {
-        try {
-          const oppData = await api.getPlayer(oppId);
-          if (oppData?.nation) setOpponentNation(oppData.nation);
-          if (oppData?.name) setOpponentName(oppData.name);
-          if (oppData?.portrait) setOpponentPortrait(oppData.portrait);
-        } catch {
-          // será tentado novamente em chamadas subsequentes de loadGameState
+      // Se oppId é null mas o jogo está em andamento, o useEffect de polling cuidará
+      if (oppId && (state.phase === "PLAYING" || state.phase === "FINISHED")) {
+        // oppId já foi resolvido (via API ou sessionStorage) - buscar dados que faltam
+        const cachedNation = sessionStorage.getItem(`game_${gameId}_oppNation`);
+        if (!cachedNation) {
+          try {
+            const oppData = await api.getPlayer(oppId);
+            if (oppData?.nation) setOpponentNation(oppData.nation);
+            if (oppData?.name) setOpponentName(oppData.name);
+            if (oppData?.portrait) setOpponentPortrait(oppData.portrait);
+          } catch {}
         }
       }
 
@@ -148,6 +235,12 @@ export default function Game() {
         );
         setMyGrid(myBoard);
         setMyShipTypes(myTypes);
+
+        // Reconstruir sunkMyCells (meu board — sempre disponível)
+        const newSunkMy = buildSunkCells(myBoard, myTypes);
+        setSunkMyCells(newSunkMy);
+
+        // Reconstruir enemy board (depende de ter o oppId)
         if (oppId) {
           const { grid: oppBoard, shipTypes: oppTypes } = await api.getBoard(
             gameId,
@@ -155,90 +248,8 @@ export default function Game() {
           );
           setEnemyGrid(oppBoard);
           setEnemyShipTypes(oppTypes);
-          // Reconstruir sunkCells a partir dos shipTypes do oponente
-          // Estratégia: agrupar células por shipType via propagação linear,
-          // verificar se o grupo tem o tamanho esperado do navio (= afundado)
-          const newSunkEnemy = new Set();
-
-          // Agrupar cells com shipType em linhas consecutivas (horizontais e verticais)
-          const processedEnemy = new Set();
-          for (let r = 0; r < 10; r++) {
-            for (let c = 0; c < 10; c++) {
-              const key = `${r}-${c}`;
-              if (processedEnemy.has(key)) continue;
-              if (oppBoard[r][c] !== 3) continue;
-              const type = oppTypes.get(key);
-              if (!type) continue;
-
-              const expectedSize = SHIP_SIZES[type] || 1;
-
-              // Tentar horizontal
-              const hCells = [[r, c]];
-              for (let cc = c + 1; cc < 10 && oppBoard[r][cc] === 3 && oppTypes.get(`${r}-${cc}`) === type; cc++) {
-                hCells.push([r, cc]);
-              }
-
-              // Tentar vertical
-              const vCells = [[r, c]];
-              for (let rr = r + 1; rr < 10 && oppBoard[rr][c] === 3 && oppTypes.get(`${rr}-${c}`) === type; rr++) {
-                vCells.push([rr, c]);
-              }
-
-              let shipCells = null;
-              if (hCells.length === expectedSize) {
-                shipCells = hCells;
-              } else if (vCells.length === expectedSize) {
-                shipCells = vCells;
-              }
-
-              if (shipCells) {
-                shipCells.forEach(([sr, sc]) => {
-                  const sk = `${sr}-${sc}`;
-                  newSunkEnemy.add(sk);
-                  processedEnemy.add(sk);
-                });
-              } else {
-                processedEnemy.add(key);
-              }
-            }
-          }
+          const newSunkEnemy = buildSunkCells(oppBoard, oppTypes);
           setSunkEnemyCells(newSunkEnemy);
-
-          // Para meus navios: grupos de 3s conectados
-          const newSunkMy = new Set();
-          const visitedMy = new Set();
-          for (let r = 0; r < 10; r++) {
-            for (let c = 0; c < 10; c++) {
-              if (myBoard[r][c] === 3 && !visitedMy.has(`${r}-${c}`)) {
-                const group = [];
-                const stack = [[r, c]];
-                let shipType = null;
-                while (stack.length) {
-                  const [sr, sc] = stack.pop();
-                  const key = `${sr}-${sc}`;
-                  if (visitedMy.has(key)) continue;
-                  if (myBoard[sr]?.[sc] !== 3) continue;
-                  visitedMy.add(key);
-                  group.push(key);
-                  if (!shipType) shipType = myTypes.get(key);
-                  [
-                    [sr - 1, sc],
-                    [sr + 1, sc],
-                    [sr, sc - 1],
-                    [sr, sc + 1],
-                  ].forEach(([nr, nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
-                      stack.push([nr, nc]);
-                  });
-                }
-                // Verificar se o navio inteiro foi afundado (tamanho do grupo == tamanho do navio)
-                if (shipType && group.length === (SHIP_SIZES[shipType] || 0)) {
-                  group.forEach((k) => newSunkMy.add(k));
-                }
-              }
-            }
-          }
-          setSunkMyCells(newSunkMy);
         }
       }
     } catch (err) {
@@ -254,6 +265,96 @@ export default function Game() {
       connectedRef.current = false;
     };
   }, [gameId]);
+
+  // Se estamos em PLAYING mas opponentId ficou null (F5/reconexão onde getGameState não retorna playerBId),
+  // poll até resolver via currentTurn mudando ou getGameState retornando o campo
+  useEffect(() => {
+    if (opponentId || phase !== "PLAYING") return;
+
+    let cancelled = false;
+
+    async function resolveOpponent() {
+      for (let attempt = 0; attempt < 10 && !cancelled; attempt++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        if (cancelled) return;
+        try {
+          const state = await api.getGameState(gameId);
+          let resolved = null;
+          if (state.playerAId && state.playerBId) {
+            resolved = state.playerAId === user.id ? state.playerBId : state.playerAId;
+          } else if (state.playerAId && state.playerAId !== user.id) {
+            resolved = state.playerAId;
+          } else if (state.playerBId && state.playerBId !== user.id) {
+            resolved = state.playerBId;
+          }
+          if (!resolved && state.currentTurn && state.currentTurn !== user.id) {
+            resolved = state.currentTurn;
+          }
+          if (resolved) {
+            if (cancelled) return;
+            setOpponentId(resolved);
+            // Buscar perfil
+            try {
+              const oppData = await api.getPlayer(resolved);
+              if (!cancelled) {
+                if (oppData?.nation) setOpponentNation(oppData.nation);
+                if (oppData?.name) setOpponentName(oppData.name);
+                if (oppData?.portrait) setOpponentPortrait(oppData.portrait);
+              }
+            } catch {}
+            // Buscar enemy board
+            try {
+              const { grid: oppBoard, shipTypes: oppTypes } = await api.getBoard(gameId, resolved);
+              if (!cancelled) {
+                setEnemyGrid(oppBoard);
+                setEnemyShipTypes(oppTypes);
+                setSunkEnemyCells(buildSunkCells(oppBoard, oppTypes));
+              }
+            } catch {}
+            return;
+          }
+        } catch {}
+      }
+    }
+
+    resolveOpponent();
+    return () => { cancelled = true; };
+  }, [opponentId, phase, gameId, user.id]);
+
+  // Fallback extra: se temos opponentId mas enemyGrid está vazio (não carregou no loadGameState),
+  // buscar o board inimigo assim que possível
+  useEffect(() => {
+    if (!opponentId || phase !== "PLAYING") return;
+    // Verifica se o enemy grid está todo zerado (não carregou)
+    const isEmpty = enemyGrid.every((row) => row.every((cell) => cell === 0));
+    if (!isEmpty) return;
+
+    let cancelled = false;
+    async function loadEnemyBoard() {
+      // Pequeno delay para não competir com loadGameState
+      await new Promise((r) => setTimeout(r, 200));
+      if (cancelled) return;
+      try {
+        const { grid: oppBoard, shipTypes: oppTypes } = await api.getBoard(gameId, opponentId);
+        if (cancelled) return;
+        setEnemyGrid(oppBoard);
+        setEnemyShipTypes(oppTypes);
+        setSunkEnemyCells(buildSunkCells(oppBoard, oppTypes));
+      } catch {}
+      // Buscar nação se não temos
+      if (!opponentNation) {
+        try {
+          const oppData = await api.getPlayer(opponentId);
+          if (cancelled) return;
+          if (oppData?.nation) setOpponentNation(oppData.nation);
+          if (oppData?.name) setOpponentName(oppData.name);
+          if (oppData?.portrait) setOpponentPortrait(oppData.portrait);
+        } catch {}
+      }
+    }
+    loadEnemyBoard();
+    return () => { cancelled = true; };
+  }, [opponentId, phase, gameId]);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -421,6 +522,29 @@ export default function Game() {
     const { row, col, attackerId, nextTurn, status, shipType } = message;
     const isMyAttack = attackerId === user.id;
     if (nextTurn) setCurrentTurn(nextTurn);
+
+    // Resolver opponentId se ainda não temos (ex: após F5)
+    if (!opponentId) {
+      const inferredOppId = !isMyAttack ? attackerId : (nextTurn && nextTurn !== user.id ? nextTurn : null);
+      if (inferredOppId) {
+        setOpponentId(inferredOppId);
+        api.getPlayer(inferredOppId)
+          .then((data) => {
+            if (data?.nation) setOpponentNation(data.nation);
+            if (data?.name) setOpponentName(data.name);
+            if (data?.portrait) setOpponentPortrait(data.portrait);
+          })
+          .catch(() => {});
+        // Buscar enemy board que pode ter ficado vazio
+        api.getBoard(gameId, inferredOppId)
+          .then(({ grid: oppBoard, shipTypes: oppTypes }) => {
+            setEnemyGrid(oppBoard);
+            setEnemyShipTypes(oppTypes);
+            setSunkEnemyCells(buildSunkCells(oppBoard, oppTypes));
+          })
+          .catch(() => {});
+      }
+    }
 
     // Se o turno continua sendo meu após um ataque, resetar o timer
     if (isMyAttack && (!nextTurn || nextTurn === user.id)) {
@@ -817,6 +941,10 @@ export default function Game() {
             isVictory={isVictory}
             onReturn={() => {
               ws.disconnect();
+              sessionStorage.removeItem(`game_${gameId}_oppId`);
+              sessionStorage.removeItem(`game_${gameId}_oppNation`);
+              sessionStorage.removeItem(`game_${gameId}_oppName`);
+              sessionStorage.removeItem(`game_${gameId}_oppPortrait`);
               navigate("/", { replace: true });
             }}
           />
