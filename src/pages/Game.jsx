@@ -5,6 +5,7 @@ import * as api from "../services/api";
 import * as ws from "../services/websocket";
 import * as sfx from "../services/sounds";
 import Board from "../components/Board";
+import VersusScreen from "../components/VersusScreen";
 import { SHIP_SIZES } from "../constants/ships";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import AlertBanner from "../components/AlertBanner";
@@ -36,10 +37,12 @@ export default function Game() {
   const [opponentId, setOpponentId] = useState(null);
   const [opponentNation, setOpponentNation] = useState(null);
   const [opponentName, setOpponentName] = useState(null);
+  const [opponentPortrait, setOpponentPortrait] = useState(null);
   const [winner, setWinner] = useState(null);
   const [myReady, setMyReady] = useState(false);
   const [opponentReady, setOpponentReady] = useState(false);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+  const [showVersus, setShowVersus] = useState(false);
 
   const [selectedShip, setSelectedShip] = useState(null);
   const selectedShipRef = useRef(null);
@@ -79,6 +82,7 @@ export default function Game() {
           const oppData = await api.getPlayer(oppId);
           if (oppData?.nation) setOpponentNation(oppData.nation);
           if (oppData?.name) setOpponentName(oppData.name);
+          if (oppData?.portrait) setOpponentPortrait(oppData.portrait);
         } catch {
           // será tentado novamente em chamadas subsequentes de loadGameState
         }
@@ -368,6 +372,7 @@ export default function Game() {
                 .then((data) => {
                   if (data?.nation) setOpponentNation(data.nation);
                   if (data?.name) setOpponentName(data.name);
+                  if (data?.portrait) setOpponentPortrait(data.portrait);
                 })
                 .catch(() => {});
             }
@@ -377,10 +382,10 @@ export default function Game() {
           );
           break;
         case "GAME_STARTED":
-          setPhase("PLAYING");
           setCurrentTurn(message.playerId);
           addLog("⚓ TODOS OS POSTOS — INICIAR FOGO");
           loadGameState();
+          setShowVersus(true);
           break;
         case "GAME_OVER":
           setPhase("FINISHED");
@@ -696,6 +701,20 @@ export default function Game() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+      {showVersus && (
+        <VersusScreen
+          myName={user?.name}
+          myNation={user?.nation}
+          myPortrait={user?.portrait}
+          opponentName={opponentName}
+          opponentNation={opponentNation}
+          opponentPortrait={opponentPortrait}
+          onComplete={() => {
+            setShowVersus(false);
+            setPhase("PLAYING");
+          }}
+        />
+      )}
       <PageHeader shrink>
         <div className="flex flex-col items-end">
           <span
