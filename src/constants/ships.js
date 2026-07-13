@@ -32,11 +32,74 @@ export const SHIP_SPRITES = {
       v: "/ships/usa/destroyer-eua-vertical.png",
     },
   },
+  USSR: {
+    CARRIER: {
+      h: "/ships/urss/porta-aviao-urss-horizontal.png",
+      v: "/ships/urss/porta-aviao-urss-vertical.png",
+    },
+    BATTLESHIP: {
+      h: "/ships/urss/encouracado-urss-horizontal.png",
+      v: "/ships/urss/encouracado-urss-vertical.png",
+    },
+    CRUISER: {
+      h: "/ships/urss/cruzador-urss-horizontal.png",
+      v: "/ships/urss/cruzador-urss-vertical.png",
+    },
+    SUBMARINE: {
+      h: "/ships/urss/submarino-urss-horizontal.png",
+      v: "/ships/urss/submarino-urss-vertical.png",
+    },
+    DESTROYER: {
+      h: "/ships/urss/destroyer-urss-horizontal.png",
+      v: "/ships/urss/destroyer-urss-vertical.png",
+    },
+  },
+  JAPAN: {
+    CARRIER: {
+      h: "/ships/japao/porta-aviao-japao-horizontal.png",
+      v: "/ships/japao/porta-aviao-japao-vertical.png",
+    },
+    BATTLESHIP: {
+      h: "/ships/japao/encouracao-japao-horizontal.png",
+      v: "/ships/japao/encouracao-japao-vertical.png",
+    },
+    CRUISER: {
+      h: "/ships/japao/cruzador-japao-horizontal.png",
+      v: "/ships/japao/cruzador-japao-vertical.png",
+    },
+    SUBMARINE: {
+      h: "/ships/japao/submarino-japao-horizontal.png",
+      v: "/ships/japao/submarino-japao-vertical.png",
+    },
+    DESTROYER: {
+      h: "/ships/japao/destroyer-japao-horizontal.png",
+      v: "/ships/japao/destroyer-japao-vertical.png",
+    },
+  },
+  ITALY: {
+    CARRIER: {
+      h: "/ships/italia/porta-aviao-italia-horizontal.png",
+      v: "/ships/italia/porta-aviao-italia-vertical.png",
+    },
+    BATTLESHIP: {
+      h: "/ships/italia/encouracado-italia-horizontal.png",
+      v: "/ships/italia/encouracado-italia-vertical.png",
+    },
+    CRUISER: {
+      h: "/ships/italia/cruzador-italia-horizontal.png",
+      v: "/ships/italia/cruzador-italia-vertical.png",
+    },
+    SUBMARINE: {
+      h: "/ships/italia/submarino-italia-horizontal.png",
+      v: "/ships/italia/submarino-italia-vertical.png",
+    },
+    DESTROYER: {
+      h: "/ships/italia/destroyer-italia-horizontal.png",
+      v: "/ships/italia/destroyer-italia-vertical.png",
+    },
+  },
   // UK: {},
-  // USSR: {},
   // GERMANY: {},
-  // JAPAN: {},
-  // ITALY: {},
 };
 
 /**
