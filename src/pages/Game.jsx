@@ -8,6 +8,7 @@ import Board from "../components/Board";
 import VersusScreen from "../components/VersusScreen";
 import { SHIP_SIZES } from "../constants/ships";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
+import ConfirmDialog from "../components/ConfirmDialog";
 import AlertBanner from "../components/AlertBanner";
 
 
@@ -76,6 +77,7 @@ export default function Game() {
   const [turnEpoch, setTurnEpoch] = useState(0); // incrementa a cada novo turno do jogador para forçar reset do timer
   const enemyGridRef = useRef(createEmptyGrid());
   const [animatedCell, setAnimatedCell] = useState(null); // {row, col, type, board}
+  const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
 
   function createEmptyGrid() {
     return Array.from({ length: 10 }, () => Array(10).fill(0));
@@ -815,8 +817,11 @@ export default function Game() {
   }
 
   function handleSurrender() {
-    if (!confirm("ABANDONAR A MISSÃO? Esta ação não pode ser desfeita."))
-      return;
+    setShowSurrenderConfirm(true);
+  }
+
+  function confirmSurrender() {
+    setShowSurrenderConfirm(false);
     ws.publish(`/app/game/${gameId}/surrender`, {});
   }
 
@@ -839,6 +844,16 @@ export default function Game() {
           }}
         />
       )}
+      <ConfirmDialog
+        open={showSurrenderConfirm}
+        title="ABANDONAR A MISSÃO?"
+        message="Esta ação é irreversível. Você será registrado como derrotado e o oponente vencerá automaticamente."
+        confirmText="SE RENDER"
+        cancelText="VOLTAR AO COMBATE"
+        variant="danger"
+        onConfirm={confirmSurrender}
+        onCancel={() => setShowSurrenderConfirm(false)}
+      />
       <PageHeader shrink>
         <div className="flex flex-col items-end">
           <span

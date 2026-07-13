@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';
 import * as ws from '../services/websocket';
 import LoadingState from '../components/LoadingState';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function Room() {
   const { roomId } = useParams();
@@ -13,13 +14,56 @@ export default function Room() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const navigatingToGameRef = useRef(false);
+  const isHostRef = useRef(false);
+  const cancelAndLeaveRef = useRef(null);
+
+  async function cancelAndLeave() {
+    try {
+      await api.deleteRoom(roomId);
+    } catch {}
+    ws.disconnect();
+    navigate('/', { replace: true });
+  }
+
+  // Mantém ref atualizada para uso em event listeners
+  cancelAndLeaveRef.current = cancelAndLeave;
 
   useEffect(() => {
     loadRoom();
     connectWs();
+
+    // Bloqueia o botão voltar do navegador — empurra estado extra no history
+    const handlePopState = (e) => {
+      if (navigatingToGameRef.current) return;
+      // Re-empurra para impedir a saída
+      window.history.pushState(null, '', window.location.href);
+      // Mostra dialog de confirmação se for o host
+      if (isHostRef.current) {
+        setShowLeaveConfirm(true);
+      }
+    };
+
+    // Empurra estado inicial para ter algo para interceptar no popstate
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', handlePopState);
+
+    // beforeunload — avisa se fechar aba/recarregar
+    const handleBeforeUnload = (e) => {
+      if (navigatingToGameRef.current) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
-      // Só desconecta se NÃO estiver navegando para o game
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Se sair do componente sem ser para o game, cancela a sala
+      if (!navigatingToGameRef.current && isHostRef.current) {
+        api.deleteRoom(roomId).catch(() => {});
+      }
       if (!navigatingToGameRef.current) {
         ws.disconnect();
       }
@@ -78,8 +122,26 @@ export default function Room() {
 
   const isHost = room?.hostId === user?.id;
 
+  // Mantém ref sincronizada para uso no cleanup/popstate
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
+
   return (
     <div className="min-h-screen bg-background tactical-grid-bg flex items-center justify-center p-4">
+      <ConfirmDialog
+        open={showLeaveConfirm}
+        title="ABANDONAR ÁREA DE PREPARAÇÃO?"
+        message="A operação será cancelada automaticamente e a sala será destruída."
+        confirmText="ABANDONAR"
+        cancelText="PERMANECER"
+        variant="warning"
+        onConfirm={() => {
+          setShowLeaveConfirm(false);
+          cancelAndLeaveRef.current();
+        }}
+        onCancel={() => setShowLeaveConfirm(false)}
+      />
       <div className="w-full max-w-lg">
         {/* Cartão de Preparação */}
         <div className="dispatch-border p-8 shadow-2xl relative">

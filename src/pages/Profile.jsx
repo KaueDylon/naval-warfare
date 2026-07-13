@@ -8,6 +8,7 @@ import PageHeader, {
   BackToHQButton,
 } from "../components/PageHeader";
 import AlertBanner from "../components/AlertBanner";
+import ConfirmDialog from "../components/ConfirmDialog";
 import BottomNav from "../components/BottomNav";
 import SectionCard from "../components/SectionCard";
 import TopSecretStamp from "../components/TopSecretStamp";
@@ -30,6 +31,7 @@ export default function Profile() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -97,12 +99,11 @@ export default function Profile() {
   }
 
   async function handleDelete() {
-    if (
-      !confirm(
-        "CONFIRMAR: Esta ação é irreversível. Excluir seu registro de comando?",
-      )
-    )
-      return;
+    setShowDeleteConfirm(true);
+  }
+
+  async function confirmDelete() {
+    setShowDeleteConfirm(false);
     try {
       await api.deleteMe();
       logout();
@@ -122,6 +123,16 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="EXCLUIR REGISTRO DE COMANDO"
+        message="Esta ação é irreversível. Todos os seus dados, histórico de batalhas e progresso serão permanentemente destruídos."
+        confirmText="EXCLUIR CONTA"
+        cancelText="MANTER CONTA"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
       <PageHeader>
         <HeaderIconButton
           icon="military_tech"
