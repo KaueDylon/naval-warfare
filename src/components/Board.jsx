@@ -352,7 +352,7 @@ export default function Board({
                   objectFit: 'contain',
                   opacity: isSunk ? 0.7 : 0.85,
                   filter: isSunk
-                    ? 'sepia(0.3) brightness(0.7) saturate(0.8)'
+                    ? 'sepia(0.3) brightness(0.7) saturate(0.8) blur(0.7px)'
                     : 'none',
                 }}
               />

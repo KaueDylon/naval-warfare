@@ -5,6 +5,7 @@ import * as api from "../services/api";
 import * as ws from "../services/websocket";
 import * as sfx from "../services/sounds";
 import Board from "../components/Board";
+import { SHIP_SIZES } from "../constants/ships";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import AlertBanner from "../components/AlertBanner";
 
@@ -69,7 +70,17 @@ export default function Game() {
 
       const oppId =
         state.playerAId === user.id ? state.playerBId : state.playerAId;
-      setOpponentId(oppId);
+      setOpponentId(oppId || null);
+
+      // Buscar perfil do oponente (nação) assim que temos o ID
+      if (oppId) {
+        try {
+          const oppData = await api.getPlayer(oppId);
+          if (oppData?.nation) setOpponentNation(oppData.nation);
+        } catch {
+          // será tentado novamente em chamadas subsequentes de loadGameState
+        }
+      }
 
       if (state.playerAId === user.id) {
         setMyReady(state.playerAReady || false);
@@ -138,48 +149,57 @@ export default function Game() {
           );
           setEnemyGrid(oppBoard);
           setEnemyShipTypes(oppTypes);
-          // Reconstruir sunkCells a partir dos shipTypes do oponente (células com value=3 que têm shipType)
-          // e do próprio board
+          // Reconstruir sunkCells a partir dos shipTypes do oponente
+          // Estratégia: agrupar células por shipType via propagação linear,
+          // verificar se o grupo tem o tamanho esperado do navio (= afundado)
           const newSunkEnemy = new Set();
-          const newSunkMy = new Set();
-          // Para o inimigo: células com value=3 que pertencem a um navio completamente afundado
-          // Simplificação: toda célula com value=3 no board inimigo que tem shipType revelado
-          // é parte de um navio — mas precisamos verificar se TODO o navio foi afundado
-          // Por ora, recalcular via flood-fill grupos de 3s no grid inimigo
-          const visitedEnemy = new Set();
+
+          // Agrupar cells com shipType em linhas consecutivas (horizontais e verticais)
+          const processedEnemy = new Set();
           for (let r = 0; r < 10; r++) {
             for (let c = 0; c < 10; c++) {
-              if (oppBoard[r][c] === 3 && !visitedEnemy.has(`${r}-${c}`)) {
-                const group = [];
-                const stack = [[r, c]];
-                while (stack.length) {
-                  const [sr, sc] = stack.pop();
-                  const key = `${sr}-${sc}`;
-                  if (visitedEnemy.has(key)) continue;
-                  if (oppBoard[sr]?.[sc] !== 3) continue;
-                  visitedEnemy.add(key);
-                  group.push(key);
-                  [
-                    [sr - 1, sc],
-                    [sr + 1, sc],
-                    [sr, sc - 1],
-                    [sr, sc + 1],
-                  ].forEach(([nr, nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
-                      stack.push([nr, nc]);
-                  });
-                }
-                // Verificar se todas as células do grupo têm shipType (= navio completamente revelado = afundado)
-                const allHaveType = group.every((k) => oppTypes.has(k));
-                if (allHaveType && group.length >= 2) {
-                  group.forEach((k) => newSunkEnemy.add(k));
-                }
+              const key = `${r}-${c}`;
+              if (processedEnemy.has(key)) continue;
+              if (oppBoard[r][c] !== 3) continue;
+              const type = oppTypes.get(key);
+              if (!type) continue;
+
+              const expectedSize = SHIP_SIZES[type] || 1;
+
+              // Tentar horizontal
+              const hCells = [[r, c]];
+              for (let cc = c + 1; cc < 10 && oppBoard[r][cc] === 3 && oppTypes.get(`${r}-${cc}`) === type; cc++) {
+                hCells.push([r, cc]);
+              }
+
+              // Tentar vertical
+              const vCells = [[r, c]];
+              for (let rr = r + 1; rr < 10 && oppBoard[rr][c] === 3 && oppTypes.get(`${rr}-${c}`) === type; rr++) {
+                vCells.push([rr, c]);
+              }
+
+              let shipCells = null;
+              if (hCells.length === expectedSize) {
+                shipCells = hCells;
+              } else if (vCells.length === expectedSize) {
+                shipCells = vCells;
+              }
+
+              if (shipCells) {
+                shipCells.forEach(([sr, sc]) => {
+                  const sk = `${sr}-${sc}`;
+                  newSunkEnemy.add(sk);
+                  processedEnemy.add(sk);
+                });
+              } else {
+                processedEnemy.add(key);
               }
             }
           }
           setSunkEnemyCells(newSunkEnemy);
 
           // Para meus navios: grupos de 3s conectados
+          const newSunkMy = new Set();
           const visitedMy = new Set();
           for (let r = 0; r < 10; r++) {
             for (let c = 0; c < 10; c++) {
@@ -206,14 +226,7 @@ export default function Game() {
                   });
                 }
                 // Verificar se o navio inteiro foi afundado (tamanho do grupo == tamanho do navio)
-                const shipSizes = {
-                  CARRIER: 5,
-                  BATTLESHIP: 4,
-                  CRUISER: 3,
-                  SUBMARINE: 3,
-                  DESTROYER: 2,
-                };
-                if (shipType && group.length === shipSizes[shipType]) {
+                if (shipType && group.length === (SHIP_SIZES[shipType] || 0)) {
                   group.forEach((k) => newSunkMy.add(k));
                 }
               }
@@ -235,14 +248,6 @@ export default function Game() {
       connectedRef.current = false;
     };
   }, [gameId]);
-
-  // Buscar nação do oponente para exibir sprites corretos
-  useEffect(() => {
-    if (!opponentId) return;
-    api.getPlayer(opponentId)
-      .then((data) => { if (data?.nation) setOpponentNation(data.nation); })
-      .catch(() => {}); // silencioso — sprite simplesmente não aparece
-  }, [opponentId]);
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -352,7 +357,16 @@ export default function Game() {
       switch (message.type) {
         case "PLAYER_READY":
           if (message.playerId === user.id) setMyReady(true);
-          else setOpponentReady(true);
+          else {
+            setOpponentReady(true);
+            // Se o oponente deu ready mas ainda não sabemos quem ele é, resolver agora
+            if (!opponentId && message.playerId) {
+              setOpponentId(message.playerId);
+              api.getPlayer(message.playerId)
+                .then((data) => { if (data?.nation) setOpponentNation(data.nation); })
+                .catch(() => {});
+            }
+          }
           addLog(
             `Comandante ${message.playerId === user.id ? "VOCÊ" : "INIMIGO"} pronto para o combate`,
           );
@@ -420,7 +434,8 @@ export default function Game() {
       case "SUNK":
         if (isMyAttack) {
           // Registrar o shipType no mapa de tipos do inimigo
-          if (shipType) {
+          // (para HIT, registra só a célula atingida; para SUNK, propaga para todas depois)
+          if (shipType && status === "HIT") {
             setEnemyShipTypes((prev) => {
               const next = new Map(prev);
               next.set(`${row}-${col}`, shipType);
@@ -430,30 +445,51 @@ export default function Game() {
           setEnemyGrid((prev) => {
             const next = prev.map((r) => [...r]);
             next[row][col] = 3;
-            if (status === "SUNK") {
-              // detecta células conectadas ao hit que também são 3 (navio afundado)
-              const newSunk = new Set();
-              const visited = new Set();
-              const stack = [[row, col]];
-              while (stack.length) {
-                const [r, c] = stack.pop();
-                const key = `${r}-${c}`;
-                if (visited.has(key)) continue;
-                visited.add(key);
-                if ((next[r]?.[c] ?? 0) === 3) {
-                  newSunk.add(key);
-                  [
-                    [r - 1, c],
-                    [r + 1, c],
-                    [r, c - 1],
-                    [r, c + 1],
-                  ].forEach(([nr, nc]) => {
-                    if (nr >= 0 && nr < 10 && nc >= 0 && nc < 10)
-                      stack.push([nr, nc]);
-                  });
-                }
+            if (status === "SUNK" && shipType) {
+              // Determinar as células do navio afundado via propagação LINEAR
+              // usando o tamanho do navio como limite
+              const expectedSize = SHIP_SIZES[shipType] || 1;
+
+              // Coletar cells contíguas com valor 3 na mesma LINHA
+              const hCells = [[row, col]];
+              for (let c = col - 1; c >= 0 && next[row][c] === 3; c--) hCells.unshift([row, c]);
+              for (let c = col + 1; c < 10 && next[row][c] === 3; c++) hCells.push([row, c]);
+
+              // Coletar cells contíguas com valor 3 na mesma COLUNA
+              const vCells = [[row, col]];
+              for (let r = row - 1; r >= 0 && next[r][col] === 3; r--) vCells.unshift([r, col]);
+              for (let r = row + 1; r < 10 && next[r][col] === 3; r++) vCells.push([r, col]);
+
+              // Escolher a direção correta
+              let shipCells;
+              if (expectedSize === 1) {
+                shipCells = [[row, col]];
+              } else if (hCells.length === expectedSize) {
+                shipCells = hCells;
+              } else if (vCells.length === expectedSize) {
+                shipCells = vCells;
+              } else if (hCells.length > expectedSize) {
+                // Ambiguidade: mais cells que o esperado. Usar segmento centrado no hit.
+                const idx = hCells.findIndex(([r, c]) => r === row && c === col);
+                const start = Math.max(0, Math.min(idx, hCells.length - expectedSize));
+                shipCells = hCells.slice(start, start + expectedSize);
+              } else if (vCells.length > expectedSize) {
+                const idx = vCells.findIndex(([r, c]) => r === row && c === col);
+                const start = Math.max(0, Math.min(idx, vCells.length - expectedSize));
+                shipCells = vCells.slice(start, start + expectedSize);
+              } else {
+                // Nenhum match exato — pegar a direção com mais cells
+                shipCells = hCells.length >= vCells.length ? hCells : vCells;
               }
+
+              const newSunk = new Set(shipCells.map(([r, c]) => `${r}-${c}`));
               setSunkEnemyCells((prev2) => new Set([...prev2, ...newSunk]));
+              // Propagar shipType para TODAS as células do navio afundado
+              setEnemyShipTypes((prev2) => {
+                const next2 = new Map(prev2);
+                newSunk.forEach((key) => next2.set(key, shipType));
+                return next2;
+              });
             }
             return next;
           });
