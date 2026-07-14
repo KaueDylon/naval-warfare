@@ -56,6 +56,12 @@ export const PORTRAIT_IMAGES = {
   ITALY_ADMIRAL: "/portraits/italy-admiral.webp",
   ITALY_PILOT: "/portraits/italy-pilot.webp",
   ITALY_GENERAL: "/portraits/italy-general.webp",
+  USA_ADMIRAL: "/portraits/eua-admiral.png",
+  USA_PILOT: "/portraits/eua-pilot.png",
+  USA_GENERAL: "/portraits/eua-general.png",
+  UK_ADMIRAL: "/portraits/uk-admiral.png",
+  UK_PILOT: "/portraits/uk-pilot.png",
+  UK_GENERAL: "/portraits/uk-general.png",
 };
 
 export const NATIONS = [
