@@ -98,8 +98,50 @@ export const SHIP_SPRITES = {
       v: "/ships/italia/destroyer-italia-vertical.png",
     },
   },
-  // UK: {},
-  // GERMANY: {},
+  UK: {
+    CARRIER: {
+      h: "/ships/reino-unido/porta-aviao-reino-unido-horizontal.png",
+      v: "/ships/reino-unido/porta-aviao-reino-unido-vertical.png",
+    },
+    BATTLESHIP: {
+      h: "/ships/reino-unido/encouracado-reinounido-horizontal.png",
+      v: "/ships/reino-unido/encouracado-reinounido-vertical.png",
+    },
+    CRUISER: {
+      h: "/ships/reino-unido/cruzador-reinounido-horizontal.png",
+      v: "/ships/reino-unido/cruzador-reinounido-vertical.png",
+    },
+    SUBMARINE: {
+      h: "/ships/reino-unido/submarino-reinounido-horizontal.png",
+      v: "/ships/reino-unido/submarino-reinounido-vertical.png",
+    },
+    DESTROYER: {
+      h: "/ships/reino-unido/destroyer-reinounido-horizontal.png",
+      v: "/ships/reino-unido/destroyer-reinounido-vertical.png",
+    },
+  },
+  GERMANY: {
+    CARRIER: {
+      h: "/ships/alemanha/porta-aviao-alemanha-horizontal.png",
+      v: "/ships/alemanha/porta-aviao-alemanha-vertical.png",
+    },
+    BATTLESHIP: {
+      h: "/ships/alemanha/encouracado-alemanha-horizontal.png",
+      v: "/ships/alemanha/encouracado-alemanha-vertical.png",
+    },
+    CRUISER: {
+      h: "/ships/alemanha/cruzador-alemanha-horizontal.png",
+      v: "/ships/alemanha/cruzador-alemanha-vertical.png",
+    },
+    SUBMARINE: {
+      h: "/ships/alemanha/submarino-alemanha-horizontal.png",
+      v: "/ships/alemanha/submarino-alemanha-vertical.png",
+    },
+    DESTROYER: {
+      h: "/ships/alemanha/destroyer-alemanha-horizontal.png",
+      v: "/ships/alemanha/destroyer-alemanha-vertical.png",
+    },
+  },
 };
 
 /**
