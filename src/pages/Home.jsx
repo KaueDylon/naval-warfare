@@ -7,6 +7,7 @@ import AlertBanner from "../components/AlertBanner";
 import BottomNav from "../components/BottomNav";
 import EmptyState from "../components/EmptyState";
 
+
 export default function Home() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -77,8 +78,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <PageHeader>
+    <div className="min-h-screen flex flex-col bg-background pb-16 md:pb-0">
+      <PageHeader
+        mobileActions={
+          <HeaderIconButton icon="logout" title="Sair" onClick={logout} danger />
+        }
+      >
         <HeaderIconButton icon="military_tech" title="Ranking" onClick={() => navigate("/ranking")} />
         <HeaderIconButton icon="history" title="Histórico" onClick={() => navigate("/history")} />
         <HeaderDivider />
@@ -87,7 +92,7 @@ export default function Home() {
           className="flex items-center gap-2 p-1 pr-3 hover:bg-surface-container transition-colors"
         >
           <span className="material-symbols-outlined text-primary">account_circle</span>
-          <span className="text-xs text-on-surface hidden md:inline uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)" }}>
+          <span className="text-xs text-on-surface uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)" }}>
             {user?.name}
           </span>
         </button>
@@ -96,7 +101,7 @@ export default function Home() {
       </PageHeader>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-3 md:px-8 py-6 md:py-8 pb-24 md:pb-8">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-3 md:px-8 py-6 md:py-8">
         {/* Cabeçalho da Seção */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-primary-container pb-6">
           <div>
@@ -250,12 +255,7 @@ export default function Home() {
         </div>
       </main>
 
-      <BottomNav items={[
-        { icon: 'videogame_asset', label: 'Jogar', onClick: handleCreateRoom, disabled: loading },
-        { icon: 'list_alt', label: 'Salas', onClick: loadRooms, active: true },
-        { icon: 'query_stats', label: 'Stats', path: '/ranking' },
-        { icon: 'person', label: 'Perfil', path: '/profile' },
-      ]} />
+      <BottomNav />
     </div>
   );
 }

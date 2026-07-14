@@ -3,24 +3,37 @@ import { useNavigate } from "react-router-dom";
 /**
  * PageHeader — cabeçalho padrão de todas as páginas internas.
  *
+ * Os botões de navegação (children) ficam ocultos em mobile (< md) pois
+ * a BottomNav já provê navegação nesse breakpoint. Isso elimina redundância.
+ *
  * Props:
- *   children  — botões/ações que aparecem à direita do título
+ *   children  — botões/ações que aparecem à direita do título (desktop only)
+ *   mobileActions — ações que devem aparecer TAMBÉM no mobile (ex: logout, surrender)
  *   shrink    — adiciona shrink-0 (necessário em flex column como no Game)
  */
-export default function PageHeader({ children, shrink = false }) {
+export default function PageHeader({ children, mobileActions, shrink = false }) {
   return (
     <header
-      className={`sticky top-0 z-50 border-b-2 border-outline-variant px-4 md:px-6 h-16 flex items-center bg-surface-container-lowest${shrink ? " shrink-0" : ""}`}
+      className={`sticky top-0 z-50 border-b-2 border-outline-variant px-4 md:px-6 h-14 md:h-16 flex items-center bg-surface-container-lowest${shrink ? " shrink-0" : ""}`}
     >
       <div className="max-w-5xl mx-auto w-full flex items-center justify-between gap-2">
         <h1
-          className="text-lg md:text-xl lg:text-2xl stencil-text text-primary shrink-0"
+          className="text-base md:text-xl lg:text-2xl stencil-text text-primary shrink-0"
           style={{ fontFamily: "var(--font-headline)" }}
         >
           NAVAL WARFARE: 1941
         </h1>
+
+        {/* Mobile: apenas ações essenciais (logout, etc) */}
+        {mobileActions && (
+          <div className="flex items-center gap-1 md:hidden">
+            {mobileActions}
+          </div>
+        )}
+
+        {/* Desktop: navegação completa */}
         {children && (
-          <div className="flex items-center gap-1 md:gap-4 overflow-x-auto">
+          <div className="hidden md:flex items-center gap-4">
             {children}
           </div>
         )}

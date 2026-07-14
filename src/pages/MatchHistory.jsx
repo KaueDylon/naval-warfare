@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import * as api from "../services/api";
 import PageHeader, { BackToHQButton } from "../components/PageHeader";
+import BottomNav from "../components/BottomNav";
 import LoadingState from "../components/LoadingState";
 import EmptyState from "../components/EmptyState";
 
@@ -45,12 +46,12 @@ export default function MatchHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-16 md:pb-0">
       <PageHeader>
         <BackToHQButton />
       </PageHeader>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full p-6">
+      <main className="flex-1 max-w-4xl mx-auto w-full p-4 md:p-6">
         <div className="dispatch-border shadow-2xl overflow-hidden">
           {/* Cabeçalho da Tabela */}
           <div
@@ -162,6 +163,8 @@ export default function MatchHistory() {
           </div>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 }

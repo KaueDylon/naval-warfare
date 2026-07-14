@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import * as api from "../services/api";
 import PageHeader, { BackToHQButton } from "../components/PageHeader";
+import BottomNav from "../components/BottomNav";
 import LoadingState from "../components/LoadingState";
 import EmptyState from "../components/EmptyState";
 import NationIcon from "../components/NationIcon";
@@ -40,12 +41,12 @@ export default function Ranking() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col pb-16 md:pb-0">
       <PageHeader>
         <BackToHQButton />
       </PageHeader>
 
-      <main className="flex-1 max-w-5xl mx-auto w-full p-6 space-y-6">
+      <main className="flex-1 max-w-5xl mx-auto w-full p-4 md:p-6 space-y-6">
         {/* Minha Posição */}
         {myRanking !== null && myRanking !== -1 && (
           <div className="dispatch-border p-5 flex items-center justify-between">
@@ -193,6 +194,8 @@ export default function Ranking() {
           </div>
         </div>
       </main>
+
+      <BottomNav />
     </div>
   );
 }

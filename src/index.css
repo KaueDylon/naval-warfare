@@ -39,6 +39,11 @@ body {
   min-height: 100vh;
 }
 
+/* Safe area for devices with notch/gesture bar */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* Stencil text style */
 .stencil-text {
   font-family: var(--font-headline);

@@ -122,7 +122,7 @@ export default function Profile() {
     : [];
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <ConfirmDialog
         open={showDeleteConfirm}
         title="EXCLUIR REGISTRO DE COMANDO"
@@ -133,7 +133,11 @@ export default function Profile() {
         onConfirm={confirmDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-      <PageHeader>
+      <PageHeader
+        mobileActions={
+          <HeaderIconButton icon="logout" title="Sair" onClick={logout} danger />
+        }
+      >
         <HeaderIconButton
           icon="military_tech"
           title="Ranking"
@@ -412,14 +416,7 @@ export default function Profile() {
         </SectionCard>
       </main>
 
-      <BottomNav
-        items={[
-          { icon: "home", label: "HQ", path: "/" },
-          { icon: "military_tech", label: "Rank", path: "/ranking" },
-          { icon: "history", label: "Hist", path: "/history" },
-          { icon: "person", label: "Perfil", path: "/profile" },
-        ]}
-      />
+      <BottomNav />
     </div>
   );
 }
