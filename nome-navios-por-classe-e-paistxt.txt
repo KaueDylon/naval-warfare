@@ -4,17 +4,17 @@ EUA: Encouracado- IOWA
 	 Destroyer- LAFFEY
 	 Submarino- WAHOO
 	 
-URSS: Encouracado- 
-	  Porta-Aviao- 
-	  Cruzador- 
-	  Destroyer- 
-	  Submarino- 
+URSS: Encouracado- Marat
+	  Porta-Aviao- Project 72
+	  Cruzador- Kirov
+	  Destroyer- Gremyashchy
+	  Submarino- S-13
 
-ITALIA: Encouracado- 
-	    Porta-Aviao- 
-	    Cruzador- 
-	    Destroyer- 
-	    Submarino- 
+ITALIA: Encouracado- Roma
+	    Porta-Aviao- Aquila
+	    Cruzador- Zara
+	    Destroyer- Alpino
+	    Submarino- Scirè
 
 ALEMANHA:  Encouracado- 
 	       Porta-Aviao- 
@@ -22,14 +22,14 @@ ALEMANHA:  Encouracado-
 	       Destroyer- 
 	       Submarino- 
 
-JAPAO:  Encouracado- 
-	    Porta-Aviao- 
-	    Cruzador- 
-	    Destroyer- 
-	    Submarino- 
+JAPAO:  Encouracado- Yamato
+	    Porta-Aviao- Akagi
+	    Cruzador- Chokai
+	    Destroyer- Yukikaze
+	    Submarino- I-400
 
-REINO UNIDO: Encouracado- 
-	         Porta-Aviao- 
-	         Cruzador- 
-	         Destroyer- 
-	         Submarino- 
+REINO UNIDO: Encouracado-  King George V 
+	         Porta-Aviao- Ark Royal
+	         Cruzador- Belfest
+	         Destroyer- Cossack 
+	         Submarino- U-513
