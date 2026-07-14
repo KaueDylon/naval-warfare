@@ -7,6 +7,8 @@ import * as sfx from "../services/sounds";
 import Board from "../components/Board";
 import VersusScreen from "../components/VersusScreen";
 import { SHIP_SIZES } from "../constants/ships";
+import { getShipInfo } from "../constants/shipNames";
+import ShipHistoryTooltip from "../components/ShipHistoryTooltip";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AlertBanner from "../components/AlertBanner";
@@ -1157,6 +1159,7 @@ function SetupPhase({
           {ships.map((ship) => {
             const isPlaced = placedShips.includes(ship.id);
             const isSelected = selectedShip?.id === ship.id;
+            const shipInfo = getShipInfo(myNation, ship.id.toUpperCase());
             return (
               <button
                 key={ship.id}
@@ -1166,7 +1169,7 @@ function SetupPhase({
                   setSelectedShip(isSelected ? null : ship)
                 }
                 disabled={isPlaced || myReady}
-                className={`shrink-0 lg:w-full w-32 p-2 lg:p-3 border-2 text-left transition-all relative ${
+                className={`shrink-0 lg:w-full w-36 p-2 lg:p-3 border-2 text-left transition-all relative ${
                   isSelected
                     ? "border-secondary bg-secondary/10"
                     : isPlaced
@@ -1182,26 +1185,39 @@ function SetupPhase({
                   </div>
                 )}
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p
                       className="text-xs text-on-surface uppercase tracking-wider font-bold"
                       style={{ fontFamily: "var(--font-mono)" }}
                     >
                       {ship.name}
                     </p>
+                    {shipInfo && (
+                      <p
+                        className="text-[11px] text-secondary font-bold truncate mt-0.5"
+                        style={{ fontFamily: "var(--font-body)" }}
+                      >
+                        » {shipInfo.name}
+                      </p>
+                    )}
                     <p
-                      className="text-[10px] text-outline uppercase"
+                      className="text-[10px] text-outline uppercase mt-0.5"
                       style={{ fontFamily: "var(--font-mono)" }}
                     >
                       Tamanho: {ship.size} Unidades
                     </p>
                   </div>
-                  <span
-                    className="text-xs text-outline"
-                    style={{ fontFamily: "var(--font-mono)" }}
-                  >
-                    {isPlaced ? "0" : "1"}/1
-                  </span>
+                  <div className="flex flex-col items-center gap-1 ml-2 shrink-0">
+                    <span
+                      className="text-xs text-outline"
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
+                      {isPlaced ? "0" : "1"}/1
+                    </span>
+                    {shipInfo && (
+                      <ShipHistoryTooltip history={shipInfo.history} />
+                    )}
+                  </div>
                 </div>
               </button>
             );
