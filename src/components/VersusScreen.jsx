@@ -46,32 +46,33 @@ export default function VersusScreen({
         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent animate-pulse" />
       </div>
 
-      <div className="relative flex flex-col items-center w-full max-w-4xl px-8">
+      <div className="relative flex flex-col items-center w-full max-w-4xl px-4 sm:px-8">
         {/* Jogadores */}
-        <div className="flex items-center justify-between w-full">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center w-full gap-2 sm:gap-4">
           {/* Player A (eu) */}
           <div
-            className={`flex flex-col items-center gap-4 transition-all duration-700 ${
+            className={`flex flex-col items-center gap-2 sm:gap-4 min-w-0 transition-all duration-700 ${
               stage >= 1
                 ? "opacity-100 translate-x-0"
                 : "opacity-0 -translate-x-20"
             }`}
           >
-            <div className="w-28 h-36">
+            <div className="w-20 h-26 sm:w-28 sm:h-36">
               <PortraitImage portrait={myPortrait} size="lg" />
             </div>
             {myNation && (
-              <NationIcon nation={myNation} size={48} variant="dark" />
+              <NationIcon nation={myNation} size={36} variant="dark" className="sm:w-12 sm:h-12" />
             )}
-            <div className="text-center">
+            <div className="text-center w-full min-w-0 max-w-full">
               <p
-                className="text-3xl text-primary font-bold uppercase tracking-wider"
+                className="text-lg sm:text-2xl lg:text-3xl text-primary font-bold uppercase tracking-wider truncate px-1"
                 style={{ fontFamily: "var(--font-headline)" }}
+                title={myName || "COMANDANTE"}
               >
                 {myName || "COMANDANTE"}
               </p>
               <p
-                className="text-sm text-on-surface-variant uppercase tracking-widest mt-1"
+                className="text-[10px] sm:text-sm text-on-surface-variant uppercase tracking-widest mt-1 truncate"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
                 {myNation ? NATION_LABELS[myNation] : ""}
@@ -81,14 +82,14 @@ export default function VersusScreen({
 
           {/* VS */}
           <div
-            className={`flex flex-col items-center transition-all duration-500 ${
+            className={`flex flex-col items-center shrink-0 transition-all duration-500 ${
               stage >= 1
                 ? "opacity-100 scale-100"
                 : "opacity-0 scale-50"
             }`}
           >
             <span
-              className="text-8xl font-black text-secondary"
+              className="text-5xl sm:text-7xl lg:text-8xl font-black text-secondary"
               style={{
                 fontFamily: "var(--font-headline)",
                 textShadow: "0 0 40px rgba(218,199,105,0.5)",
@@ -100,27 +101,28 @@ export default function VersusScreen({
 
           {/* Player B (oponente) */}
           <div
-            className={`flex flex-col items-center gap-4 transition-all duration-700 ${
+            className={`flex flex-col items-center gap-2 sm:gap-4 min-w-0 transition-all duration-700 ${
               stage >= 1
                 ? "opacity-100 translate-x-0"
                 : "opacity-0 translate-x-20"
             }`}
           >
-            <div className="w-28 h-36">
+            <div className="w-20 h-26 sm:w-28 sm:h-36">
               <PortraitImage portrait={opponentPortrait} size="lg" />
             </div>
             {opponentNation && (
-              <NationIcon nation={opponentNation} size={48} variant="dark" />
+              <NationIcon nation={opponentNation} size={36} variant="dark" className="sm:w-12 sm:h-12" />
             )}
-            <div className="text-center">
+            <div className="text-center w-full min-w-0 max-w-full">
               <p
-                className="text-3xl text-error font-bold uppercase tracking-wider"
+                className="text-lg sm:text-2xl lg:text-3xl text-error font-bold uppercase tracking-wider truncate px-1"
                 style={{ fontFamily: "var(--font-headline)" }}
+                title={opponentName || "INIMIGO"}
               >
                 {opponentName || "INIMIGO"}
               </p>
               <p
-                className="text-sm text-on-surface-variant uppercase tracking-widest mt-1"
+                className="text-[10px] sm:text-sm text-on-surface-variant uppercase tracking-widest mt-1 truncate"
                 style={{ fontFamily: "var(--font-mono)" }}
               >
                 {opponentNation ? NATION_LABELS[opponentNation] : ""}
@@ -131,12 +133,12 @@ export default function VersusScreen({
 
         {/* Subtítulo */}
         <div
-          className={`mt-12 text-center transition-all duration-700 delay-500 ${
+          className={`mt-8 sm:mt-12 text-center transition-all duration-700 delay-500 ${
             stage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
           <p
-            className="text-xs text-on-surface-variant uppercase tracking-[0.3em]"
+            className="text-[10px] sm:text-xs text-on-surface-variant uppercase tracking-[0.3em]"
             style={{ fontFamily: "var(--font-mono)" }}
           >
             Preparar para combate
