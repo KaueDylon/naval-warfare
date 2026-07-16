@@ -213,3 +213,40 @@ export function playDefeat() {
     console.warn('[SFX] playDefeat failed:', e);
   }
 }
+
+/** Radar ping — usado quando um oponente é encontrado/contato estabelecido */
+export function playContactEstablished() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+
+    // Ping principal — tom limpo e curto, característico de radar/sonar
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(900, now + 0.4);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.3, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.5);
+
+    // Eco sutil (segundo ping mais baixo, levemente depois)
+    const echo = ctx.createOscillator();
+    const echoGain = ctx.createGain();
+    echo.type = 'sine';
+    echo.frequency.setValueAtTime(900, now + 0.18);
+    echoGain.gain.setValueAtTime(0.0001, now + 0.18);
+    echoGain.gain.exponentialRampToValueAtTime(0.12, now + 0.2);
+    echoGain.gain.exponentialRampToValueAtTime(0.01, now + 0.55);
+    echo.connect(echoGain);
+    echoGain.connect(ctx.destination);
+    echo.start(now + 0.18);
+    echo.stop(now + 0.55);
+  } catch (e) {
+    console.warn('[SFX] playContactEstablished failed:', e);
+  }
+}

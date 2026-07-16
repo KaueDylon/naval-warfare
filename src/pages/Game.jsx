@@ -80,6 +80,13 @@ export default function Game() {
   const [animatedCell, setAnimatedCell] = useState(null); // {row, col, type, board}
   const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
 
+  // Fade-in suave ao montar a tela (evita "corte" abrupto vindo da transição do Room)
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   function createEmptyGrid() {
     return Array.from({ length: 10 }, () => Array(10).fill(0));
   }
@@ -830,7 +837,11 @@ export default function Game() {
   const isVictory = winner === user.id;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col overflow-hidden">
+    <div
+      className={`min-h-screen bg-background flex flex-col overflow-hidden transition-opacity duration-500 ease-out ${
+        entered ? "opacity-100" : "opacity-0"
+      }`}
+    >
       {showVersus && (
         <VersusScreen
           myName={user?.name}

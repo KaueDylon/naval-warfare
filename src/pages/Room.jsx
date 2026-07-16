@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import * as api from '../services/api';
 import * as ws from '../services/websocket';
+import * as sfx from '../services/sounds';
 import LoadingState from '../components/LoadingState';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ContactEstablishedScreen from '../components/ContactEstablishedScreen';
 
 export default function Room() {
   const { roomId } = useParams();
@@ -15,6 +17,7 @@ export default function Room() {
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [contactInfo, setContactInfo] = useState(null); // { name, nation, gameId } — dispara ContactEstablishedScreen
   const navigatingToGameRef = useRef(false);
   const isHostRef = useRef(false);
   const cancelAndLeaveRef = useRef(null);
@@ -75,6 +78,8 @@ export default function Room() {
     try {
       const data = await api.getRoom(roomId);
       setRoom(data);
+      // Se a sala já está com gameId ao carregar (ex: F5 depois do oponente já ter entrado),
+      // navega direto sem repetir a animação de contato — ela já foi vista.
       if (data.gameId) {
         navigatingToGameRef.current = true;
         navigate(`/game/${data.gameId}`, { replace: true });
@@ -86,6 +91,32 @@ export default function Room() {
     }
   }
 
+  /**
+   * Dispara a transição "Contato Estabelecido" e, ao final, navega para o game.
+   * Busca a nação do oponente (se disponível) para enriquecer a tela — falha
+   * silenciosamente se a request não completar, a tela funciona sem nação também.
+   */
+  async function announceContactAndNavigate(data) {
+    navigatingToGameRef.current = true;
+    sfx.playContactEstablished();
+
+    let opponentNation = null;
+    if (data.guestId) {
+      try {
+        const guestProfile = await api.getPlayer(data.guestId);
+        opponentNation = guestProfile?.nation || null;
+      } catch {
+        // Segue sem nação — a tela de transição tolera esse dado ausente
+      }
+    }
+
+    setContactInfo({
+      name: data.guestName,
+      nation: opponentNation,
+      gameId: data.gameId,
+    });
+  }
+
   function connectWs() {
     ws.connect(
       token,
@@ -94,8 +125,7 @@ export default function Room() {
         ws.subscribePersistent('/user/queue/room-joined', (data) => {
           setRoom(data);
           if (data.gameId) {
-            navigatingToGameRef.current = true;
-            setTimeout(() => navigate(`/game/${data.gameId}`, { replace: true }), 1000);
+            announceContactAndNavigate(data);
           }
         });
         ws.subscribePersistent('/user/queue/errors', (msg) => {
@@ -127,8 +157,31 @@ export default function Room() {
     isHostRef.current = isHost;
   }, [isHost]);
 
+  // Fade-in suave ao montar a tela (evita "pop" abrupto ao chegar do Home)
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  function handleContactComplete() {
+    if (!contactInfo?.gameId) return;
+    navigate(`/game/${contactInfo.gameId}`, { replace: true });
+  }
+
   return (
-    <div className="min-h-screen bg-background tactical-grid-bg flex items-center justify-center p-4">
+    <div
+      className={`min-h-screen bg-background tactical-grid-bg flex items-center justify-center p-4 transition-opacity duration-500 ease-out ${
+        entered ? 'opacity-100' : 'opacity-0'
+      }`}
+    >
+      {contactInfo && (
+        <ContactEstablishedScreen
+          opponentName={contactInfo.name}
+          opponentNation={contactInfo.nation}
+          onComplete={handleContactComplete}
+        />
+      )}
       <ConfirmDialog
         open={showLeaveConfirm}
         title="ABANDONAR ÁREA DE PREPARAÇÃO?"
@@ -248,8 +301,8 @@ export default function Room() {
                 </div>
               )}
 
-              {/* Jogo pronto */}
-              {room?.guestName && room?.gameId && (
+              {/* Jogo pronto — fallback manual (ex: aba estava em background quando o evento chegou) */}
+              {room?.guestName && room?.gameId && !contactInfo && (
                 <button
                   onClick={() => {
                     navigatingToGameRef.current = true;
