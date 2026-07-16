@@ -35,7 +35,7 @@ export default function Room() {
     connectWs();
 
     // Bloqueia o botão voltar do navegador — empurra estado extra no history
-    const handlePopState = (e) => {
+    const handlePopState = () => {
       if (navigatingToGameRef.current) return;
       // Re-empurra para impedir a saída
       window.history.pushState(null, '', window.location.href);

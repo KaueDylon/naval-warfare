@@ -5,7 +5,6 @@ import BottomNav from "../components/BottomNav";
 import LoadingState from "../components/LoadingState";
 import EmptyState from "../components/EmptyState";
 import NationIcon from "../components/NationIcon";
-import { NATION_LABELS } from "../constants/nations";
 
 export default function Ranking() {
   const [rankings, setRankings] = useState([]);

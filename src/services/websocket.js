@@ -2,12 +2,9 @@ import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 
 let stompClient = null;
-let currentToken = null;
 let reconnectSubscriptions = []; // Callbacks para re-subscribe após reconexão
 
 export function connect(token, onConnect, onError) {
-  currentToken = token;
-
   // Se já está conectado com o mesmo token, chama onConnect imediatamente
   // para que as subscriptions do contexto atual sejam registradas
   if (stompClient && stompClient.connected) {

@@ -15,13 +15,12 @@ import TopSecretStamp from "../components/TopSecretStamp";
 import NationIcon from "../components/NationIcon";
 import PortraitImage from "../components/PortraitImage";
 import {
-  NATIONS,
   NATION_LABELS,
   NATION_PORTRAITS,
 } from "../constants/nations";
 
 export default function Profile() {
-  const { user, refreshUser, logout } = useAuth();
+  const { refreshUser, logout } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [name, setName] = useState("");
@@ -44,7 +43,7 @@ export default function Profile() {
       setName(data.name || "");
       setSelectedNation(data.nation || "");
       setSelectedPortrait((data.portrait || "").toUpperCase());
-    } catch (err) {
+    } catch {
       setError("Falha ao carregar dossiê");
     }
   }
@@ -69,19 +68,6 @@ export default function Profile() {
       setError(err.message || "Falha na atualização");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleSetNation(nation) {
-    setError("");
-    setMessage("");
-    try {
-      await api.setNation(nation);
-      setSelectedNation(nation);
-      await refreshUser();
-      setMessage(`NAÇÃO DEFINIDA: ${nation}`);
-    } catch (err) {
-      setError(err.message || "Falha ao definir nação");
     }
   }
 

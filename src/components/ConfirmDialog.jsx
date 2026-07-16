@@ -24,7 +24,6 @@ export default function ConfirmDialog({
   onCancel,
 }) {
   const dialogRef = useRef(null);
-  const confirmBtnRef = useRef(null);
 
   // Foca no botão de cancelar ao abrir (segurança: ação destrutiva não é default)
   useEffect(() => {
@@ -110,7 +109,6 @@ export default function ConfirmDialog({
             {cancelText}
           </button>
           <button
-            ref={confirmBtnRef}
             onClick={onConfirm}
             className={`text-xs px-5 py-2.5 font-bold uppercase tracking-wider border-2 transition-colors ${
               isDanger

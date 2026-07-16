@@ -31,7 +31,6 @@ export default function Game() {
   const [phase, setPhase] = useState("SETUP");
   const [myGrid, setMyGrid] = useState(createEmptyGrid());
   const [enemyGrid, setEnemyGrid] = useState(createEmptyGrid());
-  const prevEnemyGridRef = useRef(createEmptyGrid());
   const [sunkEnemyCells, setSunkEnemyCells] = useState(new Set()); // "row-col"
   const [sunkMyCells, setSunkMyCells] = useState(new Set());
   const [enemyShipTypes, setEnemyShipTypes] = useState(new Map()); // "row-col" → "CARRIER" etc.
