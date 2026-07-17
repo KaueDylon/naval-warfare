@@ -87,6 +87,22 @@ export default function Game() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Remove chaves órfãs de partidas antigas do sessionStorage (game_<outroId>_*).
+  // Evita acúmulo indefinido quando o jogador sai da partida sem passar pelo
+  // fluxo de "voltar ao lobby" (fechar aba, rendição, navegação direta por URL etc.)
+  useEffect(() => {
+    const prefix = "game_";
+    const currentPrefix = `game_${gameId}_`;
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith(prefix) && !key.startsWith(currentPrefix)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+  }, [gameId]);
+
   function createEmptyGrid() {
     return Array.from({ length: 10 }, () => Array(10).fill(0));
   }
