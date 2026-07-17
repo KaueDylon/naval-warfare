@@ -19,6 +19,7 @@ export default function Room() {
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [contactInfo, setContactInfo] = useState(null); // { name, nation, gameId } — dispara ContactEstablishedScreen
   const navigatingToGameRef = useRef(false);
+  const contactAnnouncedRef = useRef(false);
   const isHostRef = useRef(false);
   const cancelAndLeaveRef = useRef(null);
 
@@ -32,6 +33,21 @@ export default function Room() {
 
   // Mantém ref atualizada para uso em event listeners
   cancelAndLeaveRef.current = cancelAndLeave;
+
+  // Remove flags "contactSeen" órfãs de salas antigas (mesma lógica de limpeza
+  // usada em Game.jsx para as chaves game_*) — evita acúmulo no sessionStorage.
+  useEffect(() => {
+    const prefix = 'room_';
+    const currentPrefix = `room_${roomId}_`;
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith(prefix) && !key.startsWith(currentPrefix)) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => sessionStorage.removeItem(key));
+  }, [roomId]);
 
   useEffect(() => {
     loadRoom();
@@ -78,11 +94,19 @@ export default function Room() {
     try {
       const data = await api.getRoom(roomId);
       setRoom(data);
-      // Se a sala já está com gameId ao carregar (ex: F5 depois do oponente já ter entrado),
-      // navega direto sem repetir a animação de contato — ela já foi vista.
+      // Se a sala já está com gameId ao carregar — cobre dois casos:
+      // 1) quem acabou de se juntar (join já cria o game de imediato) — ainda
+      //    não viu a animação de "Contato Estabelecido", deve vê-la agora.
+      // 2) F5 numa sala cujo jogo já começou e a animação já foi vista —
+      //    navega direto, sem repetir a transição.
       if (data.gameId) {
-        navigatingToGameRef.current = true;
-        navigate(`/game/${data.gameId}`, { replace: true });
+        const alreadySeen = sessionStorage.getItem(`room_${roomId}_contactSeen`);
+        if (alreadySeen) {
+          navigatingToGameRef.current = true;
+          navigate(`/game/${data.gameId}`, { replace: true });
+        } else {
+          announceContactAndNavigate(data);
+        }
       }
     } catch (err) {
       setError(err.message || 'Falha ao carregar sala');
@@ -95,23 +119,38 @@ export default function Room() {
    * Dispara a transição "Contato Estabelecido" e, ao final, navega para o game.
    * Busca a nação do oponente (se disponível) para enriquecer a tela — falha
    * silenciosamente se a request não completar, a tela funciona sem nação também.
+   *
+   * Funciona tanto para o host (oponente = guest) quanto para o guest
+   * (oponente = host), identificando o "outro" em relação ao usuário atual.
    */
   async function announceContactAndNavigate(data) {
+    // Guarda contra disparo concorrente: loadRoom() (polling inicial) e o
+    // evento WS /user/queue/room-joined podem chegar quase simultaneamente
+    // e ambos tentar iniciar a transição — sem essa guarda, o segundo disparo
+    // reseta o ContactEstablishedScreen (remonta) e a animação "reinicia",
+    // dando a impressão de voltar à tela de espera e repetir.
+    if (contactAnnouncedRef.current) return;
+    contactAnnouncedRef.current = true;
+
     navigatingToGameRef.current = true;
     sfx.playContactEstablished();
 
+    const isHostView = data.hostId === user?.id;
+    const opponentId = isHostView ? data.guestId : data.hostId;
+    const opponentName = isHostView ? data.guestName : data.hostName;
+
     let opponentNation = null;
-    if (data.guestId) {
+    if (opponentId) {
       try {
-        const guestProfile = await api.getPlayer(data.guestId);
-        opponentNation = guestProfile?.nation || null;
+        const opponentProfile = await api.getPlayer(opponentId);
+        opponentNation = opponentProfile?.nation || null;
       } catch {
         // Segue sem nação — a tela de transição tolera esse dado ausente
       }
     }
 
     setContactInfo({
-      name: data.guestName,
+      name: opponentName,
       nation: opponentNation,
       gameId: data.gameId,
     });
@@ -166,6 +205,7 @@ export default function Room() {
 
   function handleContactComplete() {
     if (!contactInfo?.gameId) return;
+    sessionStorage.setItem(`room_${roomId}_contactSeen`, '1');
     navigate(`/game/${contactInfo.gameId}`, { replace: true });
   }
 
@@ -305,8 +345,13 @@ export default function Room() {
               {room?.guestName && room?.gameId && !contactInfo && (
                 <button
                   onClick={() => {
-                    navigatingToGameRef.current = true;
-                    navigate(`/game/${room.gameId}`, { replace: true });
+                    const alreadySeen = sessionStorage.getItem(`room_${roomId}_contactSeen`);
+                    if (alreadySeen) {
+                      navigatingToGameRef.current = true;
+                      navigate(`/game/${room.gameId}`, { replace: true });
+                    } else {
+                      announceContactAndNavigate(room);
+                    }
                   }}
                   className="btn-primary w-full py-4 text-lg"
                 >

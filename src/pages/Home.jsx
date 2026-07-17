@@ -55,11 +55,10 @@ export default function Home() {
     setLoading(true);
     try {
       const room = await api.joinRoomByCode(code.trim());
-      if (room.gameId) {
-        navigate(`/game/${room.gameId}`);
-      } else {
-        navigate(`/room/${room.roomId}`);
-      }
+      // Sempre passa pela sala de espera — é ela que exibe a animação de
+      // "Contato Estabelecido" antes de seguir para o jogo, mesmo quando o
+      // backend já retorna o gameId pronto (caso de quem está se juntando).
+      navigate(`/room/${room.roomId}`);
     } catch (err) {
       setError(err.message || "Código de operação inválido");
     } finally {
@@ -71,12 +70,8 @@ export default function Home() {
     setError("");
     setLoading(true);
     try {
-      const room = await api.joinRoom(roomId);
-      if (room.gameId) {
-        navigate(`/game/${room.gameId}`);
-      } else {
-        navigate(`/room/${room.roomId}`);
-      }
+      await api.joinRoom(roomId);
+      navigate(`/room/${roomId}`);
     } catch (err) {
       setError(err.message || "Falha ao entrar na sala");
     } finally {
