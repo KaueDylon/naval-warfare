@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import Board from "../Board";
 import Button from "../Button";
 import { getShipInfo } from "../../constants/shipNames";
 import ShipHistoryTooltip from "../ShipHistoryTooltip";
+import * as sfx from "../../services/sounds";
 
 /**
  * Fase de posicionamento de navios. Exibe o tabuleiro próprio, o manifesto
@@ -25,6 +27,13 @@ export default function SetupPhase({
   myShipTypes,
   myNation,
 }) {
+  // Trilha ambiente de sala de guerra tática — toca só enquanto o jogador
+  // está posicionando a frota. Para com fade-out ao saltar de fase.
+  useEffect(() => {
+    sfx.startWarRoomAmbience();
+    return () => sfx.stopWarRoomAmbience();
+  }, []);
+
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-6 h-full">
       {/* Main Board Area */}
