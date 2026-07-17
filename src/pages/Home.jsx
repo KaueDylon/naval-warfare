@@ -15,9 +15,16 @@ export default function Home() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [entranceAnimation, setEntranceAnimation] = useState(false);
 
   useEffect(() => {
     loadRooms();
+
+    // Dispara animação de entrada apenas ao chegar direto do login/cadastro
+    if (sessionStorage.getItem("justAuthenticated")) {
+      sessionStorage.removeItem("justAuthenticated");
+      setEntranceAnimation(true);
+    }
   }, []);
 
   async function loadRooms() {
@@ -101,7 +108,11 @@ export default function Home() {
       </PageHeader>
 
       {/* Conteúdo Principal */}
-      <main className="flex-1 w-full max-w-5xl mx-auto px-3 md:px-8 py-6 md:py-8">
+      <main
+        className={`flex-1 w-full max-w-5xl mx-auto px-3 md:px-8 py-6 md:py-8 ${
+          entranceAnimation ? "animate-dossier-reveal" : ""
+        }`}
+      >
         {/* Cabeçalho da Seção */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b-2 border-primary-container pb-6">
           <div>

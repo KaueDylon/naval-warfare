@@ -18,6 +18,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register(name, email, password);
+      sessionStorage.setItem('justAuthenticated', '1');
     } catch (err) {
       setError(err.message || 'Falha no alistamento');
     } finally {

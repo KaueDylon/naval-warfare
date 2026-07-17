@@ -17,6 +17,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, password);
+      sessionStorage.setItem('justAuthenticated', '1');
     } catch (err) {
       setError(err.message || 'Falha na autorização');
     } finally {
