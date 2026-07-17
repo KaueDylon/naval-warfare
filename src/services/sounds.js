@@ -250,3 +250,45 @@ export function playContactEstablished() {
     console.warn('[SFX] playContactEstablished failed:', e);
   }
 }
+
+/**
+ * Clique de botão — usado em ações de decisão (confirmar, criar, entrar,
+ * atacar, se render). Som curto de relé/switch mecânico, discreto o
+ * suficiente para não cansar em uso repetido.
+ */
+export function playClick() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+
+    // Estalo curto e seco (switch mecânico)
+    const noise = ctx.createBufferSource();
+    noise.buffer = createNoiseBuffer(ctx, 0.03);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'highpass';
+    filter.frequency.value = 2500;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.18, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.03);
+
+    // Tom breve grave (corpo do clique)
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(420, now);
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.04);
+    oscGain.gain.setValueAtTime(0.06, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  } catch (e) {
+    console.warn('[SFX] playClick failed:', e);
+  }
+}

@@ -7,6 +7,7 @@ import * as sfx from '../services/sounds';
 import LoadingState from '../components/LoadingState';
 import ConfirmDialog from '../components/ConfirmDialog';
 import ContactEstablishedScreen from '../components/ContactEstablishedScreen';
+import Button from '../components/Button';
 
 export default function Room() {
   const { roomId } = useParams();
@@ -343,7 +344,7 @@ export default function Room() {
 
               {/* Jogo pronto — fallback manual (ex: aba estava em background quando o evento chegou) */}
               {room?.guestName && room?.gameId && !contactInfo && (
-                <button
+                <Button
                   onClick={() => {
                     const alreadySeen = sessionStorage.getItem(`room_${roomId}_contactSeen`);
                     if (alreadySeen) {
@@ -353,10 +354,11 @@ export default function Room() {
                       announceContactAndNavigate(room);
                     }
                   }}
-                  className="btn-primary w-full py-4 text-lg"
+                  withSound
+                  className="w-full py-4 text-lg"
                 >
                   INICIAR OPERAÇÃO
-                </button>
+                </Button>
               )}
 
               {/* Erro */}
@@ -369,9 +371,9 @@ export default function Room() {
               {/* Ações */}
               <div className="space-y-2 pt-2">
                 {isHost && !room?.gameId && (
-                  <button onClick={handleCancel} className="btn-danger text-xs w-full">
+                  <Button variant="danger" onClick={handleCancel} withSound className="text-xs w-full">
                     ABORTAR OPERAÇÃO
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

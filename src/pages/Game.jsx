@@ -6,6 +6,7 @@ import VersusScreen from "../components/VersusScreen";
 import PageHeader, { HeaderDivider } from "../components/PageHeader";
 import ConfirmDialog from "../components/ConfirmDialog";
 import AlertBanner from "../components/AlertBanner";
+import Button from "../components/Button";
 import SetupPhase from "../components/game/SetupPhase";
 import PlayingPhase from "../components/game/PlayingPhase";
 import FinishedPhase from "../components/game/FinishedPhase";
@@ -177,12 +178,9 @@ export default function Game() {
         {phase !== "FINISHED" && (
           <>
             <HeaderDivider />
-            <button
-              onClick={handleSurrender}
-              className="btn-danger text-xs px-3 py-1.5"
-            >
+            <Button variant="danger" onClick={handleSurrender} className="text-xs px-3 py-1.5">
               Se Render
-            </button>
+            </Button>
           </>
         )}
       </PageHeader>

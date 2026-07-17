@@ -1,6 +1,8 @@
 /**
  * Fase final — exibe vitória ou derrota e permite retornar ao lobby.
  */
+import Button from "../Button";
+
 export default function FinishedPhase({ isVictory, onReturn }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -34,9 +36,9 @@ export default function FinishedPhase({ isVictory, onReturn }) {
           </p>
         </div>
 
-        <button onClick={onReturn} className="btn-primary text-lg px-8 py-4">
+        <Button onClick={onReturn} withSound className="text-lg px-8 py-4">
           VOLTAR À BASE
-        </button>
+        </Button>
       </div>
     </div>
   );

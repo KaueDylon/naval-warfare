@@ -14,6 +14,7 @@ import SectionCard from "../components/SectionCard";
 import TopSecretStamp from "../components/TopSecretStamp";
 import NationIcon from "../components/NationIcon";
 import PortraitImage from "../components/PortraitImage";
+import Button from "../components/Button";
 import {
   NATION_LABELS,
   NATION_PORTRAITS,
@@ -377,13 +378,9 @@ export default function Profile() {
                 style={{ fontFamily: "var(--font-mono)" }}
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary text-sm"
-            >
+            <Button type="submit" disabled={loading} withSound className="text-sm">
               {loading ? "PROCESSANDO..." : "ATUALIZAR DOSSIÊ"}
-            </button>
+            </Button>
           </form>
         </SectionCard>
 

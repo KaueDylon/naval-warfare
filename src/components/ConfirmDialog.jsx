@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import * as sfx from '../services/sounds';
 
 /**
  * ConfirmDialog — modal de confirmação estilizado no padrão militar.
@@ -109,7 +110,10 @@ export default function ConfirmDialog({
             {cancelText}
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => {
+              sfx.playClick();
+              onConfirm?.();
+            }}
             className={`text-xs px-5 py-2.5 font-bold uppercase tracking-wider border-2 transition-colors ${
               isDanger
                 ? 'bg-error/20 border-error text-error hover:bg-error hover:text-on-error'

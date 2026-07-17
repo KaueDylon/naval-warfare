@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AlertBanner from '../components/AlertBanner';
 import TopSecretStamp from '../components/TopSecretStamp';
+import Button from '../components/Button';
 
 export default function Login() {
   const { login } = useAuth();
@@ -81,13 +82,14 @@ export default function Login() {
             </div>
 
             {/* Enviar */}
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary text-sm"
+              withSound
+              className="w-full text-sm"
             >
               {loading ? 'TRANSMITINDO...' : 'ACESSAR COMANDO'}
-            </button>
+            </Button>
           </form>
 
           {/* Link de Cadastro */}

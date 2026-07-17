@@ -5,6 +5,7 @@ import * as api from "../services/api";
 import AlertBanner from "../components/AlertBanner";
 import TopSecretStamp from "../components/TopSecretStamp";
 import NationIcon from "../components/NationIcon";
+import Button from "../components/Button";
 import { NATIONS } from "../constants/nations";
 
 export default function SelectNation() {
@@ -123,13 +124,14 @@ export default function SelectNation() {
                 Escolha com sabedoria, Comandante.
               </p>
             )}
-            <button
+            <Button
               onClick={handleConfirm}
               disabled={!selected || loading}
-              className="btn-primary text-sm px-8 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
+              withSound
+              className="text-sm px-8 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? "PROCESSANDO..." : "CONFIRMAR ALIANÇA"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

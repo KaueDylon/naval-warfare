@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AlertBanner from '../components/AlertBanner';
 import TopSecretStamp from '../components/TopSecretStamp';
+import Button from '../components/Button';
 
 export default function Register() {
   const { register } = useAuth();
@@ -96,13 +97,14 @@ export default function Register() {
             </div>
 
             {/* Enviar */}
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary text-sm"
+              withSound
+              className="w-full text-sm"
             >
               {loading ? 'PROCESSANDO ALISTAMENTO...' : 'ALISTAR-SE'}
-            </button>
+            </Button>
           </form>
 
           {/* Link de Login */}

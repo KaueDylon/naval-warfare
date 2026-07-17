@@ -6,6 +6,7 @@ import PageHeader, { HeaderDivider, HeaderIconButton } from "../components/PageH
 import AlertBanner from "../components/AlertBanner";
 import BottomNav from "../components/BottomNav";
 import EmptyState from "../components/EmptyState";
+import Button from "../components/Button";
 
 
 export default function Home() {
@@ -118,14 +119,15 @@ export default function Home() {
               Zona de Operações
             </h2>
           </div>
-          <button
+          <Button
             onClick={handleCreateRoom}
             disabled={loading}
-            className="btn-primary flex items-center gap-2 text-sm"
+            withSound
+            className="flex items-center gap-2 text-sm"
           >
             <span className="material-symbols-outlined text-lg">add_box</span>
             Nova Operação
-          </button>
+          </Button>
         </div>
 
         {/* Entrar por Código */}
@@ -145,13 +147,14 @@ export default function Home() {
               onKeyDown={(e) => e.key === "Enter" && handleJoinByCode()}
             />
           </div>
-          <button
+          <Button
             onClick={handleJoinByCode}
             disabled={loading || !code.trim()}
-            className="btn-primary text-xs px-6"
+            withSound
+            className="text-xs px-6"
           >
             Entrar
-          </button>
+          </Button>
         </div>
 
         {/* Erro */}
@@ -235,13 +238,15 @@ export default function Home() {
 
                   {/* Botão Entrar */}
                   <div className="col-span-1 md:col-span-3 flex justify-end">
-                    <button
+                    <Button
+                      variant="secondary"
                       onClick={() => handleJoinRoom(room.roomId)}
                       disabled={loading}
-                      className="btn-secondary w-full md:w-auto text-xs"
+                      withSound
+                      className="w-full md:w-auto text-xs"
                     >
                       Entrar
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );

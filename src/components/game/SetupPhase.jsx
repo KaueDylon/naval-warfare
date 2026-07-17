@@ -1,4 +1,5 @@
 import Board from "../Board";
+import Button from "../Button";
 import { getShipInfo } from "../../constants/shipNames";
 import ShipHistoryTooltip from "../ShipHistoryTooltip";
 
@@ -136,15 +137,16 @@ export default function SetupPhase({
             </div>
           </div>
 
-          <button
+          <Button
             onClick={onReady}
             disabled={myReady || placedShips.length < 5}
-            className="btn-primary px-8 py-3 text-base disabled:opacity-40"
+            withSound
+            className="px-8 py-3 text-base disabled:opacity-40"
           >
             {myReady
               ? "EM ESPERA"
               : `POSICIONAR FROTA (${placedShips.length}/5)`}
-          </button>
+          </Button>
         </div>
       </section>
 
